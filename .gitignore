@@ -1,0 +1,24 @@
+# Build directories
+build/
+out/
+bin/
+*.exe
+*.dll
+
+# IDE and OS files
+.vs/
+.vscode/
+*.user
+*.suo
+CMakeCache.txt
+CMakeFiles/
+CMakeScripts/
+Testing/
+Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+
+# LiiL specific
+settings.ini
+liil.log
