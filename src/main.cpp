@@ -2,6 +2,7 @@
 #include "ui/MainWindow.h"
 #include "core/Logger.h"
 #include "config/ConfigManager.h"
+#include "command/CommandEngine.h"
 #include <string>
 #include <filesystem>
 
@@ -37,6 +38,10 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
     logger.SetUICallback([&mainWindow](const std::string& msg) {
         mainWindow.AppendLog(msg);
     });
+
+    // Initialize Command Engine
+    auto& cmdEngine = liil::command::CommandEngine::GetInstance();
+    cmdEngine.Initialize();
 
     liil::core::Logger::Info("LiiL starting up...");
     liil::core::Logger::Info("Version: " + config.GetString("version"));

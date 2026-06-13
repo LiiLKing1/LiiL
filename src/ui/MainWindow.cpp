@@ -1,5 +1,6 @@
 #include "MainWindow.h"
 #include "../core/Logger.h"
+#include "../command/CommandEngine.h"
 #include <commctrl.h>
 #include <vector>
 
@@ -171,6 +172,9 @@ void MainWindow::OnInputReady() {
 
     // Log the input
     core::Logger::Info("User: " + msg);
+
+    // Execute command
+    command::CommandEngine::GetInstance().Execute(msg);
 }
 
 LRESULT CALLBACK MainWindow::InputEditProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {

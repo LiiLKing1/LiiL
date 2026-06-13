@@ -20,6 +20,8 @@ set(SOURCES
     src/ui/MainWindow.cpp
     src/core/Logger.cpp
     src/config/ConfigManager.cpp
+    src/command/SystemCommands.cpp
+    src/command/CommandEngine.cpp
 )
 
 # Header files (for IDE grouping)
@@ -27,6 +29,8 @@ set(HEADERS
     src/ui/MainWindow.h
     src/core/Logger.h
     src/config/ConfigManager.h
+    src/command/SystemCommands.h
+    src/command/CommandEngine.h
 )
 
 # Add executable
@@ -37,4 +41,4 @@ add_executable(${PROJECT_NAME} WIN32 ${SOURCES} ${HEADERS})
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 # Link Windows libraries
-target_link_libraries(${PROJECT_NAME} PRIVATE User32 Gdi32 Comctl32)
+target_link_libraries(${PROJECT_NAME} PRIVATE User32 Gdi32 Comctl32 Dxva2)
