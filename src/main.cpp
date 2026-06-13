@@ -10,15 +10,15 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
     (void)hPrevInstance;
     (void)pCmdLine;
 
-    // Set working directory to executable directory (optional, but good for local config/logs)
+    // Set working directory to executable directory
     wchar_t path[MAX_PATH];
     GetModuleFileNameW(NULL, path, MAX_PATH);
-    std::filesystem::path exePath(path);
-    std::filesystem::current_path(exePath.parent_path());
+    std::filesystem::path exeDir = std::filesystem::path(path).parent_path();
 
     // Initialize ConfigManager
     auto& config = liil::config::ConfigManager::GetInstance();
-    if (!config.Load("settings.ini")) {
+    std::string configPath = (exeDir / "settings.ini").string();
+    if (!config.Load(configPath)) {
         // If it doesn't exist, set some defaults and save
         config.SetString("app_name", "LiiL");
         config.SetString("version", "0.1.0");
@@ -30,7 +30,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
     
     // Initialize Logger and attach UI callback
     auto& logger = liil::core::Logger::GetInstance();
-    logger.Initialize("liil.log");
+    std::string logPath = (exeDir / "liil.log").string();
+    logger.Initialize(logPath);
     
     // Setup lambda to append logs to the UI safely
     logger.SetUICallback([&mainWindow](const std::string& msg) {
