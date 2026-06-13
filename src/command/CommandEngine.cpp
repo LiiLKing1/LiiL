@@ -72,22 +72,33 @@ void CommandEngine::Execute(const std::string& input) {
         std::smatch match;
         
         // Match "...ni och"
-        std::regex openRegex(R"(^([a-z0-9]+)(?:ni)? och$)");
+        std::regex openRegex(R"(^(.+?)(?:ni)? och$)");
         
         // Match "...dan chiq"
-        std::regex closeRegex(R"(^([a-z0-9]+)dan chiq$)");
+        std::regex closeRegex(R"(^(.+?)dan chiq$)");
         
         // Match "...ga kir"
-        std::regex folderRegex(R"(^([a-z0-9]+)ga kir$)");
+        std::regex folderRegex(R"(^(.+?)ga kir$)");
 
         if (std::regex_match(normalized, match, openRegex) && match.size() > 1) {
-            SystemCommands::OpenApp(match[1].str());
+            std::string target = match[1].str();
+            target = std::regex_replace(target, std::regex(R"(\s+$)"), "");
+            
+            if (target == "desktop" || target == "ish stoli" || target == "downloads" || target == "hujjatlar") {
+                SystemActions::OpenFolder(target);
+            } else {
+                SystemCommands::OpenApp(target);
+            }
         } 
         else if (std::regex_match(normalized, match, closeRegex) && match.size() > 1) {
-            SystemActions::CloseApp(match[1].str());
+            std::string target = match[1].str();
+            target = std::regex_replace(target, std::regex(R"(\s+$)"), "");
+            SystemActions::CloseApp(target);
         }
         else if (std::regex_match(normalized, match, folderRegex) && match.size() > 1) {
-            SystemActions::OpenFolder(match[1].str());
+            std::string target = match[1].str();
+            target = std::regex_replace(target, std::regex(R"(\s+$)"), "");
+            SystemActions::OpenFolder(target);
         }
         else {
             core::Logger::Warning("Noma'lum buyruq: " + input);

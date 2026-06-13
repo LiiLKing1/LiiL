@@ -8,6 +8,7 @@
 #include <chrono>
 #include <iomanip>
 #include <sstream>
+#include <cwctype>
 
 #pragma comment(lib, "Shell32.lib")
 #pragma comment(lib, "Ole32.lib")
@@ -29,72 +30,16 @@ void SystemActions::TakeScreenshot() {
     BitBlt(hMemoryDC, 0, 0, width, height, hScreenDC, screenX, screenY, SRCCOPY);
     SelectObject(hMemoryDC, hOldBitmap);
 
-    // Generate filename based on current time
-    auto now = std::chrono::system_clock::now();
-    auto time = std::chrono::system_clock::to_time_t(now);
-    std::ostringstream ss;
-    struct tm buf;
-#ifdef _WIN32
-    localtime_s(&buf, &time);
-#else
-    localtime_r(&time, &buf);
-#endif
-    ss << "screenshot_" << std::put_time(&buf, "%Y%m%d_%H%M%S") << ".bmp";
-    std::string filename = ss.str();
-
-    // Get executable directory
-    wchar_t exePath[MAX_PATH];
-    GetModuleFileNameW(NULL, exePath, MAX_PATH);
-    std::filesystem::path fullPath = std::filesystem::path(exePath).parent_path() / filename;
-
-    // Save Bitmap to File
-    BITMAP bmp;
-    GetObject(hBitmap, sizeof(BITMAP), &bmp);
-
-    BITMAPFILEHEADER bmfHeader;
-    BITMAPINFOHEADER bi;
-
-    bi.biSize = sizeof(BITMAPINFOHEADER);
-    bi.biWidth = bmp.bmWidth;
-    bi.biHeight = bmp.bmHeight;
-    bi.biPlanes = 1;
-    bi.biBitCount = 32;
-    bi.biCompression = BI_RGB;
-    bi.biSizeImage = 0;
-    bi.biXPelsPerMeter = 0;
-    bi.biYPelsPerMeter = 0;
-    bi.biClrUsed = 0;
-    bi.biClrImportant = 0;
-
-    DWORD dwBmpSize = ((bmp.bmWidth * bi.biBitCount + 31) / 32) * 4 * bmp.bmHeight;
-    HANDLE hDIB = GlobalAlloc(GHND, dwBmpSize);
-    char* lpbitmap = (char*)GlobalLock(hDIB);
-
-    GetDIBits(hScreenDC, hBitmap, 0, (UINT)bmp.bmHeight, lpbitmap, (BITMAPINFO*)&bi, DIB_RGB_COLORS);
-
-    HANDLE hFile = CreateFileW(fullPath.c_str(), GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-    if (hFile != INVALID_HANDLE_VALUE) {
-        DWORD dwSizeofDIB = dwBmpSize + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
-        bmfHeader.bfOffBits = (DWORD)sizeof(BITMAPFILEHEADER) + (DWORD)sizeof(BITMAPINFOHEADER);
-        bmfHeader.bfSize = dwSizeofDIB;
-        bmfHeader.bfType = 0x4D42; // BM
-        bmfHeader.bfReserved1 = 0;
-        bmfHeader.bfReserved2 = 0;
-
-        DWORD dwBytesWritten = 0;
-        WriteFile(hFile, (LPSTR)&bmfHeader, sizeof(BITMAPFILEHEADER), &dwBytesWritten, NULL);
-        WriteFile(hFile, (LPSTR)&bi, sizeof(BITMAPINFOHEADER), &dwBytesWritten, NULL);
-        WriteFile(hFile, (LPSTR)lpbitmap, dwBmpSize, &dwBytesWritten, NULL);
-        CloseHandle(hFile);
-
-        core::Logger::Info("Screenshot saqlandi: " + filename);
+    if (OpenClipboard(NULL)) {
+        EmptyClipboard();
+        SetClipboardData(CF_BITMAP, hBitmap);
+        CloseClipboard();
+        core::Logger::Info("Screenshot xotiraga (clipboard) saqlandi.");
     } else {
-        core::Logger::Error("Screenshot saqlashda xatolik yuz berdi.");
+        core::Logger::Error("Clipboardni ochishda xatolik yuz berdi.");
+        DeleteObject(hBitmap);
     }
 
-    GlobalUnlock(hDIB);
-    GlobalFree(hDIB);
-    DeleteObject(hBitmap);
     DeleteDC(hMemoryDC);
     ReleaseDC(NULL, hScreenDC);
 }
@@ -177,10 +122,18 @@ void SystemActions::CloseApp(const std::string& appName) {
     else if (appName == "telegram") exeName = "Telegram.exe";
     else if (appName == "steam") exeName = "steam.exe";
     else if (appName == "roblox") exeName = "RobloxPlayerBeta.exe";
+    else if (appName == "yandexmusic") exeName = "YandexMusic.exe";
     else exeName += ".exe";
 
     std::wstring wexeName;
     wexeName.assign(exeName.begin(), exeName.end());
+    
+    std::wstring searchLower = wexeName;
+    std::transform(searchLower.begin(), searchLower.end(), searchLower.begin(), std::towlower);
+    
+    std::wstring appNameW;
+    appNameW.assign(appName.begin(), appName.end());
+    std::transform(appNameW.begin(), appNameW.end(), appNameW.begin(), std::towlower);
 
     HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (hSnap == INVALID_HANDLE_VALUE) {
@@ -195,17 +148,14 @@ void SystemActions::CloseApp(const std::string& appName) {
     if (Process32FirstW(hSnap, &pe32)) {
         do {
             std::wstring currentExe = pe32.szExeFile;
-            // Case insensitive comparison
-            bool match = true;
-            if (currentExe.length() == wexeName.length()) {
-                for (size_t i = 0; i < currentExe.length(); ++i) {
-                    if (std::tolower(currentExe[i]) != std::tolower(wexeName[i])) {
-                        match = false;
-                        break;
-                    }
-                }
-            } else {
-                match = false;
+            std::wstring currentExeLower = currentExe;
+            std::transform(currentExeLower.begin(), currentExeLower.end(), currentExeLower.begin(), std::towlower);
+
+            bool match = false;
+            if (currentExeLower == searchLower) {
+                match = true;
+            } else if (currentExeLower.find(appNameW) != std::wstring::npos) {
+                match = true;
             }
 
             if (match) {
@@ -214,9 +164,13 @@ void SystemActions::CloseApp(const std::string& appName) {
                 if (hProcess != NULL) {
                     TerminateProcess(hProcess, 0);
                     CloseHandle(hProcess);
-                    core::Logger::Info(exeName + " yopildi.");
+                    std::wstring wexe(pe32.szExeFile);
+                    std::string narrowExe(wexe.begin(), wexe.end());
+                    core::Logger::Info(narrowExe + " yopildi.");
                 } else {
-                    core::Logger::Error(exeName + " ni yopish uchun huquq yetarli emas.");
+                    std::wstring wexe(pe32.szExeFile);
+                    std::string narrowExe(wexe.begin(), wexe.end());
+                    core::Logger::Error(narrowExe + " ni yopish uchun huquq yetarli emas.");
                 }
             }
         } while (Process32NextW(hSnap, &pe32));
