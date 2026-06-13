@@ -1,5 +1,6 @@
 #include "CommandEngine.h"
 #include "SystemCommands.h"
+#include "SystemActions.h"
 #include "../core/Logger.h"
 #include <algorithm>
 #include <regex>
@@ -30,7 +31,12 @@ void CommandEngine::Initialize() {
     RegisterCommand("telegramni och", [](){ SystemCommands::OpenApp("telegram"); });
     RegisterCommand("steamni och", [](){ SystemCommands::OpenApp("steam"); });
     
-    core::Logger::Info("Command Engine initsializatsiya qilindi. Ovoz, yorqinlik va dasturlarni ochish buyruqlari tayyor.");
+    // System Actions
+    RegisterCommand("screenshot", SystemActions::TakeScreenshot);
+    RegisterCommand("take screenshot", SystemActions::TakeScreenshot);
+    RegisterCommand("nusxa ol", SystemActions::CopySelection);
+    
+    core::Logger::Info("Command Engine initsializatsiya qilindi. Ovoz, yorqinlik, dasturlar va tizim amallari tayyor.");
 }
 
 void CommandEngine::RegisterCommand(const std::string& trigger, std::function<void()> action) {
@@ -63,12 +69,27 @@ void CommandEngine::Execute(const std::string& input) {
     if (it != m_commands.end()) {
         it->second();
     } else {
-        // Fallback generic parsing for "...ni och" or "... och"
-        std::regex openRegex(R"(^([a-z0-9]+)(?:ni)? och$)");
         std::smatch match;
+        
+        // Match "...ni och"
+        std::regex openRegex(R"(^([a-z0-9]+)(?:ni)? och$)");
+        
+        // Match "...dan chiq"
+        std::regex closeRegex(R"(^([a-z0-9]+)dan chiq$)");
+        
+        // Match "...ga kir"
+        std::regex folderRegex(R"(^([a-z0-9]+)ga kir$)");
+
         if (std::regex_match(normalized, match, openRegex) && match.size() > 1) {
             SystemCommands::OpenApp(match[1].str());
-        } else {
+        } 
+        else if (std::regex_match(normalized, match, closeRegex) && match.size() > 1) {
+            SystemActions::CloseApp(match[1].str());
+        }
+        else if (std::regex_match(normalized, match, folderRegex) && match.size() > 1) {
+            SystemActions::OpenFolder(match[1].str());
+        }
+        else {
             core::Logger::Warning("Noma'lum buyruq: " + input);
         }
     }

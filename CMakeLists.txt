@@ -22,6 +22,7 @@ set(SOURCES
     src/config/ConfigManager.cpp
     src/command/SystemCommands.cpp
     src/command/CommandEngine.cpp
+    src/command/SystemActions.cpp
 )
 
 # Header files (for IDE grouping)
@@ -31,6 +32,7 @@ set(HEADERS
     src/config/ConfigManager.h
     src/command/SystemCommands.h
     src/command/CommandEngine.h
+    src/command/SystemActions.h
 )
 
 # Add executable
