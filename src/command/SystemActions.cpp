@@ -151,10 +151,16 @@ void SystemActions::CloseApp(const std::string& appName) {
             std::wstring currentExeLower = currentExe;
             std::transform(currentExeLower.begin(), currentExeLower.end(), currentExeLower.begin(), std::towlower);
 
+            std::wstring noSpaceAppName = appNameW;
+            noSpaceAppName.erase(std::remove(noSpaceAppName.begin(), noSpaceAppName.end(), L' '), noSpaceAppName.end());
+
+            std::wstring noSpaceExe = currentExeLower;
+            noSpaceExe.erase(std::remove(noSpaceExe.begin(), noSpaceExe.end(), L' '), noSpaceExe.end());
+
             bool match = false;
             if (currentExeLower == searchLower) {
                 match = true;
-            } else if (currentExeLower.find(appNameW) != std::wstring::npos) {
+            } else if (!noSpaceAppName.empty() && noSpaceExe.find(noSpaceAppName) != std::wstring::npos) {
                 match = true;
             }
 

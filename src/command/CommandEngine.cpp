@@ -1,6 +1,7 @@
 #include "CommandEngine.h"
 #include "SystemCommands.h"
 #include "SystemActions.h"
+#include "AutomationEngine.h"
 #include "../core/Logger.h"
 #include <algorithm>
 #include <regex>
@@ -36,7 +37,11 @@ void CommandEngine::Initialize() {
     RegisterCommand("take screenshot", SystemActions::TakeScreenshot);
     RegisterCommand("nusxa ol", SystemActions::CopySelection);
     
-    core::Logger::Info("Command Engine initsializatsiya qilindi. Ovoz, yorqinlik, dasturlar va tizim amallari tayyor.");
+    // Automation Modes
+    RegisterCommand("coding mode", [](){ AutomationEngine::ExecuteMode("coding"); });
+    RegisterCommand("gaming mode", [](){ AutomationEngine::ExecuteMode("gaming"); });
+    
+    core::Logger::Info("Command Engine initsializatsiya qilindi. Ovoz, yorqinlik, dasturlar, amallar va rejimlar tayyor.");
 }
 
 void CommandEngine::RegisterCommand(const std::string& trigger, std::function<void()> action) {

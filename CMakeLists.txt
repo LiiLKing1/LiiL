@@ -23,6 +23,7 @@ set(SOURCES
     src/command/SystemCommands.cpp
     src/command/CommandEngine.cpp
     src/command/SystemActions.cpp
+    src/command/AutomationEngine.cpp
 )
 
 # Header files (for IDE grouping)
@@ -33,6 +34,7 @@ set(HEADERS
     src/command/SystemCommands.h
     src/command/CommandEngine.h
     src/command/SystemActions.h
+    src/command/AutomationEngine.h
 )
 
 # Add executable

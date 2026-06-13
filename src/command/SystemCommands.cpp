@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <vector>
 #include <cctype>
+#include <filesystem>
 
 #pragma comment(lib, "Dxva2.lib")
 
@@ -116,6 +117,34 @@ void SystemCommands::BrightnessDown() {
 }
 
 void SystemCommands::OpenApp(const std::string& appName) {
+    // 1. Apps papkasidan qidirish
+    wchar_t exePath[MAX_PATH];
+    GetModuleFileNameW(NULL, exePath, MAX_PATH);
+    std::filesystem::path appsDir = std::filesystem::path(exePath).parent_path() / "Apps";
+
+    if (std::filesystem::exists(appsDir) && std::filesystem::is_directory(appsDir)) {
+        for (const auto& entry : std::filesystem::directory_iterator(appsDir)) {
+            if (entry.path().extension() == ".lnk") {
+                std::string linkName = entry.path().stem().string();
+                
+                std::string q = appName;
+                std::string t = linkName;
+                q.erase(std::remove(q.begin(), q.end(), ' '), q.end());
+                t.erase(std::remove(t.begin(), t.end(), ' '), t.end());
+                std::transform(q.begin(), q.end(), q.begin(), ::tolower);
+                std::transform(t.begin(), t.end(), t.begin(), ::tolower);
+                
+                if (!q.empty() && t.find(q) != std::string::npos) {
+                    core::Logger::Info("Apps papkasidan topildi: " + linkName);
+                    std::wstring wpath = entry.path().wstring();
+                    ShellExecuteW(NULL, L"open", wpath.c_str(), NULL, NULL, SW_SHOWNORMAL);
+                    return; // Topdik va ochdik
+                }
+            }
+        }
+    }
+
+    // 2. Oddiy usulda ochish
     auto& config = config::ConfigManager::GetInstance();
     
     std::string key = "app_" + appName;
@@ -124,8 +153,8 @@ void SystemCommands::OpenApp(const std::string& appName) {
     std::string path = config.GetString(key, "");
     
     if (path.empty()) {
-        if (appName == "yandex") path = "browser.exe"; // Ko'pincha Yandex shunday nomlanadi
-        else if (appName == "steam") path = "steam://"; // URL protokol orqali ochish ancha oson
+        if (appName == "yandex") path = "browser.exe";
+        else if (appName == "steam") path = "steam://";
         else if (appName == "telegram") path = "tg://";
         else if (appName == "roblox") path = "robloxplayer-launcher.exe";
         else path = appName + ".exe";
@@ -140,8 +169,7 @@ void SystemCommands::OpenApp(const std::string& appName) {
     HINSTANCE result = ShellExecuteW(NULL, L"open", wpath.c_str(), NULL, NULL, SW_SHOWNORMAL);
     
     if (reinterpret_cast<INT_PTR>(result) <= 32) {
-        core::Logger::Error("Dasturni ochishda xatolik yuz berdi. Iltimos `settings.ini` fayliga quyidagi qatorni qo'shing:");
-        core::Logger::Error(key + "=C:\\Full\\Path\\To\\App.exe");
+        core::Logger::Error("Dasturni ochishda xatolik yuz berdi. Apps papkasiga yorliq (.lnk) joylang.");
     }
 }
 
