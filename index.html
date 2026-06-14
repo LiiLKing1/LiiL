@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LiiL — AI Kuzatuv Markazi</title>
+    <meta name="description" content="LiiL AI tomonidan boshqariladigan ommaviy log va xotira markazi. Sarvar haqida AI saqlagan ochiq ma'lumotlar.">
+    <meta property="og:title" content="LiiL — AI Kuzatuv Markazi">
+    <meta property="og:description" content="AI tomonidan real-vaqtda yangilanadigan shaxsiy AI assistant ma'lumotlari.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg:           #060a10;
+            --surface:      #0d1420;
+            --surface-2:    #111c2d;
+            --surface-3:    #162030;
+            --border:       #1a2840;
+            --border-soft:  #111d2e;
+            --accent:       #4f8aff;
+            --accent-glow:  rgba(79,138,255,0.15);
+            --purple:       #a855f7;
+            --green:        #22c55e;
+            --amber:        #f59e0b;
+            --red:          #ef4444;
+            --text:         #e8eeff;
+            --text-dim:     #6b82a8;
+            --text-faint:   #2e4060;
+            --mono:         'JetBrains Mono', monospace;
+            --sans:         'Inter', sans-serif;
+            --radius:       12px;
+            --radius-sm:    7px;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--sans);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+
+        /* Grid background */
+        body::before {
+            content: '';
+            position: fixed; inset: 0; z-index: 0;
+            background:
+                radial-gradient(ellipse 80% 50% at 50% -10%, rgba(79,138,255,0.08), transparent),
+                linear-gradient(rgba(79,138,255,0.025) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(79,138,255,0.025) 1px, transparent 1px);
+            background-size: auto, 50px 50px, 50px 50px;
+            pointer-events: none;
+        }
+
+        .page {
+            position: relative; z-index: 1;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 56px 20px 100px;
+        }
+
+        /* ── NAV ───────────────────────────────────────────── */
+        nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 56px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+        .nav-brand {
+            display: flex; align-items: center; gap: 10px;
+            font-family: var(--mono); font-size: 15px; font-weight: 700;
+            letter-spacing: -0.01em; color: var(--text);
+            text-decoration: none;
+        }
+        .nav-brand .dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: var(--accent);
+            box-shadow: 0 0 12px var(--accent);
+            animation: blink 2.5s ease-in-out infinite;
+        }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+        .nav-tabs {
+            display: flex; gap: 2px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 3px;
+        }
+        .tab-btn {
+            background: transparent;
+            border: none; cursor: pointer;
+            color: var(--text-dim);
+            font-family: var(--mono); font-size: 11px;
+            font-weight: 700; letter-spacing: 0.07em;
+            text-transform: uppercase;
+            padding: 7px 18px;
+            border-radius: 5px;
+            transition: all 0.18s;
+        }
+        .tab-btn:hover { color: var(--text); }
+        .tab-btn.active {
+            background: var(--surface-3);
+            color: var(--text);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+        }
+
+        /* ── HERO ──────────────────────────────────────────── */
+        .hero {
+            text-align: center;
+            margin-bottom: 52px;
+        }
+        .avatar {
+            width: 80px; height: 80px;
+            margin: 0 auto 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--purple) 100%);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 30px;
+            box-shadow: 0 0 0 1px rgba(79,138,255,0.3),
+                        0 20px 60px rgba(79,138,255,0.12),
+                        0 0 80px rgba(168,85,247,0.08);
+        }
+        .hero h1 {
+            font-size: 28px; font-weight: 800;
+            letter-spacing: -0.025em;
+            background: linear-gradient(135deg, #e8eeff 0%, #8faeff 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            margin-bottom: 6px;
+        }
+        .hero .sub {
+            font-family: var(--mono); font-size: 11px;
+            color: var(--text-faint); letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+        .status-pill {
+            display: inline-flex; align-items: center; gap: 7px;
+            background: rgba(34,197,94,0.07);
+            border: 1px solid rgba(34,197,94,0.18);
+            color: var(--green);
+            font-family: var(--mono); font-size: 11px; font-weight: 600;
+            letter-spacing: 0.06em; text-transform: uppercase;
+            padding: 5px 14px; border-radius: 20px; margin-top: 14px;
+        }
+        .status-pill .live-dot {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: var(--green);
+            box-shadow: 0 0 8px var(--green);
+            animation: pulse 2s ease-in-out infinite;
+        }
+        @keyframes pulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.3);opacity:.5} }
+
+        /* ── CONTENT ───────────────────────────────────────── */
+        #contentArea { min-height: 200px; }
+
+        /* ── MEMORY TABLE ──────────────────────────────────── */
+        .section-label {
+            font-family: var(--mono); font-size: 10px; font-weight: 700;
+            letter-spacing: 0.12em; text-transform: uppercase;
+            color: var(--text-faint); margin-bottom: 10px; padding-left: 2px;
+        }
+        .mem-toolbar {
+            display: flex; gap: 6px; margin-bottom: 12px;
+        }
+        .mem-filter {
+            background: transparent; border: 1px solid var(--border);
+            color: var(--text-dim); font-family: var(--mono); font-size: 11px;
+            font-weight: 600; letter-spacing: 0.06em; padding: 5px 14px;
+            border-radius: var(--radius-sm); cursor: pointer; transition: all 0.15s;
+        }
+        .mem-filter:hover { border-color: var(--text-dim); color: var(--text); }
+        .mem-filter.active {
+            background: rgba(79,138,255,0.1);
+            border-color: var(--accent); color: var(--accent);
+        }
+
+        .mem-table {
+            border: 1px solid var(--border);
+            border-radius: var(--radius); overflow: hidden;
+            margin-bottom: 24px;
+        }
+        .mem-thead {
+            display: grid; grid-template-columns: 160px 1fr 90px;
+            background: var(--surface-2);
+            border-bottom: 1px solid var(--border);
+            padding: 10px 20px; gap: 0;
+        }
+        .mem-th {
+            font-family: var(--mono); font-size: 10px; font-weight: 700;
+            letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-faint);
+        }
+        .mem-row {
+            display: grid; grid-template-columns: 160px 1fr 90px;
+            border-bottom: 1px solid var(--border-soft);
+            transition: background 0.12s;
+        }
+        .mem-row:last-child { border-bottom: none; }
+        .mem-row:hover { background: var(--surface); }
+        .mem-row[data-hidden="true"] { display: none; }
+
+        .mem-key {
+            font-family: var(--mono); font-size: 11px; font-weight: 700;
+            color: var(--text-faint); letter-spacing: 0.05em; text-transform: uppercase;
+            padding: 13px 20px; border-right: 1px solid var(--border-soft);
+            background: rgba(255,255,255,0.012);
+            display: flex; align-items: center; word-break: break-word;
+        }
+        .mem-val {
+            font-size: 14px; color: var(--text);
+            padding: 13px 18px; display: flex; align-items: center;
+            word-break: break-word; line-height: 1.5;
+        }
+        .mem-badge {
+            display: flex; align-items: center; justify-content: center;
+            padding: 13px 10px; border-left: 1px solid var(--border-soft);
+        }
+        .badge {
+            font-family: var(--mono); font-size: 10px; font-weight: 700;
+            letter-spacing: 0.05em; padding: 3px 8px; border-radius: 4px;
+            text-transform: uppercase; white-space: nowrap;
+        }
+        .badge-pub  { background: rgba(34,197,94,0.08);  color: var(--green); border: 1px solid rgba(34,197,94,0.18); }
+
+        /* ── LOGS ──────────────────────────────────────────── */
+        .log-group { margin-bottom: 10px; }
+        .log-group-header {
+            display: flex; align-items: center; justify-content: space-between;
+            background: var(--surface-2); border: 1px solid var(--border);
+            border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+            padding: 12px 18px; cursor: pointer; user-select: none;
+            transition: background 0.15s;
+        }
+        .log-group-header:hover { background: var(--surface-3); }
+        .log-group-header-left { display: flex; align-items: center; gap: 12px; }
+        .log-group-arrow {
+            font-size: 11px; color: var(--text-dim);
+            transition: transform 0.25s; display: inline-block;
+        }
+        .log-group.open .log-group-arrow { transform: rotate(90deg); }
+        .log-group-title {
+            font-family: var(--mono); font-size: 13px; font-weight: 700; color: var(--text);
+        }
+        .log-group-date { font-family: var(--mono); font-size: 11px; color: var(--text-faint); }
+        .log-group-badges { display: flex; gap: 5px; }
+        .badge-count {
+            font-family: var(--mono); font-size: 10px; font-weight: 700;
+            letter-spacing: 0.05em; padding: 2px 7px; border-radius: 4px;
+            text-transform: uppercase;
+        }
+        .bc-warn  { background: rgba(245,158,11,0.08); color: var(--amber); border: 1px solid rgba(245,158,11,0.2); }
+        .bc-error { background: rgba(239,68,68,0.08);  color: var(--red);   border: 1px solid rgba(239,68,68,0.2); }
+        .bc-total { background: rgba(255,255,255,0.04); color: var(--text-faint); border: 1px solid var(--border); }
+
+        .log-group-body {
+            border: 1px solid var(--border); border-top: none;
+            border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+            overflow: hidden; display: none;
+        }
+        .log-group.open .log-group-body { display: block; }
+
+        .log-filter-bar {
+            display: flex; align-items: center; gap: 6px;
+            padding: 8px 18px; background: var(--surface);
+            border-bottom: 1px solid var(--border-soft);
+        }
+        .log-filter-label {
+            font-family: var(--mono); font-size: 10px; color: var(--text-faint);
+            letter-spacing: 0.08em; text-transform: uppercase; margin-right: 2px;
+        }
+        .log-filter-btn {
+            background: transparent; border: 1px solid var(--border);
+            color: var(--text-dim); font-family: var(--mono); font-size: 11px;
+            font-weight: 600; letter-spacing: 0.05em; padding: 4px 11px;
+            border-radius: 4px; cursor: pointer; transition: all 0.15s;
+        }
+        .log-filter-btn:hover { border-color: var(--text-dim); color: var(--text); }
+        .log-filter-btn:disabled { opacity: 0.3; cursor: default; }
+        .log-filter-btn.fa { background: rgba(255,255,255,0.06); color: var(--text); border-color: var(--text-dim); }
+        .log-filter-btn.fw { background: rgba(245,158,11,0.08); color: var(--amber); border-color: rgba(245,158,11,0.25); }
+        .log-filter-btn.fe { background: rgba(239,68,68,0.08);  color: var(--red);   border-color: rgba(239,68,68,0.25); }
+
+        .log-list { display: flex; flex-direction: column; }
+        .log-entry {
+            display: grid; grid-template-columns: 76px 26px 1fr;
+            gap: 10px; padding: 8px 18px;
+            border-bottom: 1px solid transparent;
+            transition: background 0.1s; align-items: start;
+        }
+        .log-entry:last-child { border-bottom: none; }
+        .log-entry:hover { background: var(--surface); }
+        .log-entry.warn-row { background: rgba(245,158,11,0.04); }
+        .log-entry.error-row { background: rgba(239,68,68,0.04); }
+        .log-entry[data-hidden="true"] { display: none; }
+
+        .log-time {
+            font-family: var(--mono); font-size: 12px;
+            color: var(--text-faint); white-space: nowrap; padding-top: 2px;
+        }
+        .log-icon { padding-top: 2px; display: flex; align-items: flex-start; }
+        .log-icon svg { width: 14px; height: 14px; }
+        .icon-warn  { color: var(--amber); }
+        .icon-error { color: var(--red); }
+        .icon-info  { color: transparent; }
+
+        .log-msg {
+            font-family: var(--mono); font-size: 12px; line-height: 1.6;
+            color: var(--text-dim); word-break: break-word;
+        }
+        .log-entry.warn-row  .log-msg { color: #c8a045; }
+        .log-entry.error-row .log-msg { color: #d07070; }
+        .hl-user { color: var(--text); font-weight: 700; }
+        .hl-ai   { color: var(--accent); font-weight: 700; }
+
+        /* ── EMPTY ─────────────────────────────────────────── */
+        .empty-state {
+            padding: 64px 0; text-align: center;
+            font-family: var(--mono); font-size: 12px;
+            letter-spacing: 0.08em; color: var(--text-faint);
+            text-transform: uppercase;
+        }
+
+        /* ── FOOTER ────────────────────────────────────────── */
+        footer {
+            margin-top: 72px; text-align: center;
+            font-family: var(--mono); font-size: 11px; color: var(--text-faint);
+            letter-spacing: 0.05em; line-height: 1.8;
+        }
+        footer a { color: var(--accent); text-decoration: none; }
+        footer a:hover { text-decoration: underline; }
+        .footer-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: var(--radius-sm); padding: 8px 18px; margin-top: 10px;
+        }
+
+        @media (max-width: 600px) {
+            .page { padding: 32px 14px 80px; }
+            nav { flex-direction: column; align-items: flex-start; gap: 14px; }
+            .mem-thead, .mem-row { grid-template-columns: 110px 1fr 70px; }
+            .log-entry { grid-template-columns: 60px 20px 1fr; gap: 8px; }
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+
+    <nav>
+        <a class="nav-brand" href="#">
+            <span class="dot"></span>
+            LiiL
+        </a>
+        <div class="nav-tabs">
+            <button class="tab-btn active" id="btnMemory" onclick="showTab('memory')">Memory</button>
+            <button class="tab-btn"        id="btnLogs"   onclick="showTab('logs')">Logs</button>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="avatar">🤖</div>
+        <h1 id="heroTitle">LiiL AI</h1>
+        <div class="sub">Personal AI Assistant — Public Dashboard</div>
+        <div class="status-pill">
+            <span class="live-dot"></span>
+            Live
+        </div>
+    </section>
+
+    <div id="contentArea">
+        <div class="empty-state">Yuklanmoqda...</div>
+    </div>
+
+    <footer>
+        <div>Bu sahifa LiiL AI tomonidan avtomatik yangilanadi.</div>
+        <div class="footer-badge">
+            ⚡ Powered by <a href="https://github.com/LiiLKing1/LiiL" target="_blank">LiiL</a>&nbsp;+&nbsp;Vercel
+        </div>
+    </footer>
+</div>
+
+<script>
+    // ── Data (injected by LiiL.exe via git push) ─────────────────────────────
+    var liil_memory = [];
+    var liil_logs   = [];
+</script>
+<script src="memory_data.js" onerror="console.warn('memory_data.js not found')"></script>
+<script src="liil_data.js"   onerror="console.warn('liil_data.js not found')"></script>
+
+<script>
+// ── SVG Icons ───────────────────────────────────────────────────────────────
+const IC = {
+    warn:  `<svg viewBox="0 0 20 20" fill="none"><path d="M10 2.5L18 17H2L10 2.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M10 8v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="10" cy="14.5" r=".8" fill="currentColor"/></svg>`,
+    error: `<svg viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.8"/><path d="M7.5 7.5l5 5M12.5 7.5l-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>`,
+    arrow: `▶`,
+};
+
+let currentTab = 'memory';
+const area = document.getElementById('contentArea');
+
+function showTab(tab) {
+    currentTab = tab;
+    document.getElementById('btnMemory').classList.toggle('active', tab === 'memory');
+    document.getElementById('btnLogs').classList.toggle('active', tab === 'logs');
+    render();
+}
+
+function render() {
+    area.innerHTML = '';
+    currentTab === 'memory' ? renderMemory() : renderLogs();
+}
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ── MEMORY ───────────────────────────────────────────────────────────────────
+function renderMemory() {
+    if (!liil_memory || liil_memory.length === 0) {
+        area.innerHTML = '<div class="empty-state">Hali public xotira mavjud emas</div>';
+        return;
+    }
+
+    // Update hero name if we find it
+    const nameFact = liil_memory.find(f => typeof f === 'object' && f.title &&
+        (f.title.toLowerCase().includes('ism') || f.title.toLowerCase() === 'name'));
+    if (nameFact) document.getElementById('heroTitle').textContent = nameFact.value;
+
+    // Toolbar
+    const toolbar = document.createElement('div');
+    toolbar.className = 'mem-toolbar';
+    toolbar.innerHTML = `
+        <button class="mem-filter active" onclick="memFilter(this,'all')">Barchasi</button>
+        <button class="mem-filter"        onclick="memFilter(this,'pub')">🌐 Public</button>
+    `;
+    area.appendChild(toolbar);
+
+    // Table
+    const table = document.createElement('div');
+    table.className = 'mem-table';
+
+    const thead = document.createElement('div');
+    thead.className = 'mem-thead';
+    thead.innerHTML = '<div class="mem-th">Kalit</div><div class="mem-th">Qiymat</div><div class="mem-th">Ko\'rinish</div>';
+    table.appendChild(thead);
+
+    liil_memory.forEach(fact => {
+        let key, val, priv;
+        if (typeof fact === 'object' && fact !== null) {
+            key  = fact.title      || 'Ma\'lumot';
+            val  = fact.value      || '';
+            priv = fact.is_private || false;
+        } else {
+            key = 'Ma\'lumot'; val = String(fact); priv = false;
+        }
+
+        const row = document.createElement('div');
+        row.className = 'mem-row';
+        row.dataset.priv = priv;
+        row.innerHTML = `
+            <div class="mem-key">${esc(key)}</div>
+            <div class="mem-val">${esc(val)}</div>
+            <div class="mem-badge"><span class="badge badge-pub">Public</span></div>
+        `;
+        table.appendChild(row);
+    });
+
+    area.appendChild(table);
+}
+
+function memFilter(btn, f) {
+    document.querySelectorAll('.mem-filter').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.mem-row').forEach(r => {
+        r.dataset.hidden = (f === 'all' || (f === 'pub' && r.dataset.priv === 'false')) ? 'false' : 'true';
+    });
+}
+
+// ── LOGS ─────────────────────────────────────────────────────────────────────
+function renderLogs() {
+    if (!liil_logs || liil_logs.length === 0) {
+        area.innerHTML = '<div class="empty-state">Log topilmadi</div>';
+        return;
+    }
+
+    // Group by date → 3h chunk
+    const tree = {};
+    liil_logs.forEach(log => {
+        const [date, time] = (log.time || '').split(' ');
+        const h = parseInt((time || '00:00').split(':')[0]);
+        const s = Math.floor(h / 3) * 3;
+        const chunk = `${pad(s)}:00 — ${pad(s+3)}:00`;
+        if (!tree[date]) tree[date] = {};
+        if (!tree[date][chunk]) tree[date][chunk] = [];
+        tree[date][chunk].push(log);
+    });
+
+    const dates = Object.keys(tree).sort().reverse();
+    let isFirst = true;
+    dates.forEach(date => {
+        Object.keys(tree[date]).sort().reverse().forEach(chunk => {
+            const logs   = tree[date][chunk];
+            const warns  = logs.filter(l => l.level === 'WARN').length;
+            const errors = logs.filter(l => l.level === 'ERROR').length;
+
+            const group = document.createElement('div');
+            group.className = 'log-group' + (isFirst ? ' open' : '');
+            isFirst = false;
+
+            // Header
+            const hdr = document.createElement('div');
+            hdr.className = 'log-group-header';
+            hdr.innerHTML = `
+                <div class="log-group-header-left">
+                    <span class="log-group-arrow">${IC.arrow}</span>
+                    <span class="log-group-title">${chunk}</span>
+                    <span class="log-group-date">${date}</span>
+                </div>
+                <div class="log-group-badges">
+                    ${errors ? `<span class="badge-count bc-error">${errors} error</span>` : ''}
+                    ${warns  ? `<span class="badge-count bc-warn">${warns} warn</span>`   : ''}
+                    <span class="badge-count bc-total">${logs.length}</span>
+                </div>
+            `;
+            hdr.addEventListener('click', () => group.classList.toggle('open'));
+
+            // Body
+            const body = document.createElement('div');
+            body.className = 'log-group-body';
+
+            // Filter bar
+            const fbar = document.createElement('div');
+            fbar.className = 'log-filter-bar';
+            fbar.innerHTML = `<span class="log-filter-label">Filter:</span>`;
+
+            const list = document.createElement('div');
+            list.className = 'log-list';
+
+            const mkFBtn = (label, key, cls) => {
+                const b = document.createElement('button');
+                b.className = `log-filter-btn ${cls}`;
+                b.textContent = label;
+                if ((key==='WARN'&&!warns)||(key==='ERROR'&&!errors)) b.disabled = true;
+                b.addEventListener('click', e => {
+                    e.stopPropagation();
+                    fbar.querySelectorAll('.log-filter-btn').forEach(x=>{x.className='log-filter-btn';});
+                    b.className = `log-filter-btn ${cls}`;
+                    list.querySelectorAll('.log-entry').forEach(r=>{
+                        r.dataset.hidden = (key==='all'||r.dataset.level===key) ? 'false' : 'true';
+                    });
+                });
+                return b;
+            };
+            fbar.appendChild(mkFBtn('Barchasi','all','fa'));
+            fbar.appendChild(mkFBtn('⚠ Warn','WARN','fw'));
+            fbar.appendChild(mkFBtn('✕ Error','ERROR','fe'));
+            body.appendChild(fbar);
+
+            // Entries
+            logs.forEach(log => {
+                const lvl = log.level || 'INFO';
+                const row = document.createElement('div');
+                row.className = 'log-entry' + (lvl==='WARN'?' warn-row':lvl==='ERROR'?' error-row':'');
+                row.dataset.level  = lvl;
+                row.dataset.hidden = 'false';
+
+                let iconHtml = `<span class="icon-info"></span>`;
+                if (lvl==='WARN')  iconHtml = `<span class="icon-warn">${IC.warn}</span>`;
+                if (lvl==='ERROR') iconHtml = `<span class="icon-error">${IC.error}</span>`;
+
+                let msg = esc(log.msg || '');
+                msg = msg.replace(/User:/g, '<span class="hl-user">User:</span>');
+                msg = msg.replace(/AI:/g,   '<span class="hl-ai">AI:</span>');
+
+                row.innerHTML = `
+                    <div class="log-time">${(log.time||'').split(' ')[1]||''}</div>
+                    <div class="log-icon">${iconHtml}</div>
+                    <div class="log-msg">${msg}</div>
+                `;
+                list.appendChild(row);
+            });
+
+            body.appendChild(list);
+            group.appendChild(hdr);
+            group.appendChild(body);
+            area.appendChild(group);
+        });
+    });
+}
+
+function pad(n) { return String(n).padStart(2,'0'); }
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+window.addEventListener('load', render);
+function renderMemory() { if(currentTab==='memory') render(); }
+function renderLogs()   { if(currentTab==='logs')   render(); }
+</script>
+</body>
+</html>

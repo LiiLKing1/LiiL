@@ -1,0 +1,32 @@
+# C++ LiiL Source files
+src/
+build/
+Release/
+Debug/
+CMakeLists.txt
+
+# Executables and Binaries
+*.exe
+*.dll
+
+# IDE and Project files
+.vs/
+.vscode/
+*.user
+*.suo
+*.sln
+*.vcxproj
+*.vcxproj.*
+
+# LiiL Specific config and data
+settings.ini
+*.log
+temp/
+*.wav
+*.cache
+
+# Only allow these frontend files:
+!index.html
+!memory_data.js
+!liil_data.js
+!vercel.json
