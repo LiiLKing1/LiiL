@@ -3,227 +3,1217 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LiiL — Sarvar haqida</title>
-    <meta name="description" content="LiiL AI tomonidan Sarvar haqida saqlangan ommaviy ma'lumotlar.">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+    <title>LiiL AI — Log & Memory</title>
     <style>
         :root {
-            --bg:        #070b10;
-            --surface:   #0e1420;
-            --surface-2: #131b28;
-            --border:    #1e2a3a;
-            --accent:    #6c8aff;
-            --accent-2:  #a855f7;
-            --green:     #22c55e;
-            --text:      #eef2ff;
-            --text-dim:  #7889aa;
-            --text-faint:#3b4d6a;
-            --mono: 'JetBrains Mono', monospace;
-            --sans: 'Inter', sans-serif;
+            --bg: #0c0c0c;
+            --surface: #141414;
+            --surface-2: #1a1a1a;
+            --surface-3: #202020;
+            --line: #2a2a2a;
+            --line-soft: #222;
+            --text: #f0f0f0;
+            --text-dim: #888;
+            --text-faint: #444;
+            --accent: #7c5cfc;
+            --accent-dim: rgba(124,92,252,0.12);
+            --warn-color: #f59e0b;
+            --warn-bg: rgba(245,158,11,0.08);
+            --error-color: #ef4444;
+            --error-bg: rgba(239,68,68,0.08);
+            --info-color: #888;
+            --mono: 'JetBrains Mono', 'Consolas', 'Courier New', monospace;
+            --sans: 'Inter', 'Segoe UI', system-ui, sans-serif;
+            --radius: 10px;
+            --radius-sm: 6px;
         }
+
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        html { scroll-behavior: smooth; }
-        body {
+
+        html, body {
             background: var(--bg);
             color: var(--text);
             font-family: var(--sans);
-            min-height: 100vh;
             -webkit-font-smoothing: antialiased;
         }
 
-        /* ── Background grid ── */
-        body::before {
-            content: '';
-            position: fixed; inset: 0;
-            background-image:
-                linear-gradient(rgba(108,138,255,0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(108,138,255,0.03) 1px, transparent 1px);
-            background-size: 40px 40px;
-            pointer-events: none; z-index: 0;
+        body {
+            min-height: 100vh;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
-        .page { position: relative; z-index: 1; max-width: 760px; margin: 0 auto; padding: 60px 20px 100px; }
-
-        /* ── Hero ── */
-        .hero { text-align: center; margin-bottom: 64px; }
-        .avatar-ring {
-            width: 90px; height: 90px; margin: 0 auto 20px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--accent), var(--accent-2));
-            display: flex; align-items: center; justify-content: center;
-            font-size: 36px;
-            box-shadow: 0 0 0 1px rgba(108,138,255,0.3), 0 20px 60px rgba(108,138,255,0.15);
-        }
-        .hero h1 {
-            font-size: 32px; font-weight: 800; letter-spacing: -0.02em;
-            background: linear-gradient(135deg, #eef2ff 0%, #a5b4fc 100%);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            margin-bottom: 8px;
-        }
-        .hero .tagline {
-            font-family: var(--mono); font-size: 12px; color: var(--text-faint);
-            letter-spacing: 0.1em; text-transform: uppercase;
-        }
-        .status-dot {
-            display: inline-flex; align-items: center; gap: 6px;
-            background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.2);
-            color: var(--green); font-family: var(--mono); font-size: 11px;
-            font-weight: 600; letter-spacing: 0.06em;
-            padding: 5px 12px; border-radius: 20px; margin-top: 16px;
-        }
-        .status-dot::before {
-            content: ''; width: 7px; height: 7px; border-radius: 50%;
-            background: var(--green);
-            box-shadow: 0 0 8px var(--green);
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.6;transform:scale(1.2)} }
-
-        /* ── Section label ── */
-        .section-label {
-            font-family: var(--mono); font-size: 10px; font-weight: 700;
-            letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-faint);
-            margin-bottom: 12px; padding-left: 2px;
+        .container {
+            width: 100%;
+            max-width: 960px;
         }
 
-        /* ── Memory card ── */
-        .memory-card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            overflow: hidden;
+        /* ── Header ─────────────────────────────────────── */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 28px;
-        }
-        .memory-card-header {
-            display: flex; align-items: center; gap: 10px;
-            padding: 14px 20px;
-            border-bottom: 1px solid var(--border);
-            background: var(--surface-2);
-        }
-        .memory-card-icon { font-size: 16px; }
-        .memory-card-title {
-            font-family: var(--mono); font-size: 11px; font-weight: 700;
-            letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim);
-        }
-        .memory-row {
-            display: grid; grid-template-columns: 160px 1fr;
-            border-bottom: 1px solid rgba(30,42,58,0.7);
-        }
-        .memory-row:last-child { border-bottom: none; }
-        .mem-key {
-            font-family: var(--mono); font-size: 11px; font-weight: 700;
-            color: var(--text-faint); letter-spacing: 0.05em; text-transform: uppercase;
-            padding: 14px 20px; border-right: 1px solid rgba(30,42,58,0.7);
-            background: rgba(255,255,255,0.012);
-            display: flex; align-items: center;
-        }
-        .mem-val {
-            font-size: 14px; color: var(--text);
-            padding: 14px 20px; line-height: 1.6;
-            display: flex; align-items: center;
-        }
-        .empty-memory {
-            padding: 36px 20px; text-align: center;
-            font-family: var(--mono); font-size: 12px; color: var(--text-faint);
-            letter-spacing: 0.06em;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--line);
         }
 
-        /* ── Footer ── */
-        .footer {
-            margin-top: 64px; text-align: center;
-            font-family: var(--mono); font-size: 11px; color: var(--text-faint);
-            letter-spacing: 0.06em;
+        .title h1 {
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: var(--text);
         }
-        .footer a { color: var(--accent); text-decoration: none; }
-        .footer a:hover { text-decoration: underline; }
-        .powered-by {
-            display: inline-flex; align-items: center; gap: 6px;
-            background: var(--surface); border: 1px solid var(--border);
-            border-radius: 8px; padding: 8px 16px; margin-top: 12px;
+
+        .title .subtitle {
+            font-family: var(--mono);
+            font-size: 11px;
+            color: var(--text-faint);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-top: 5px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0;
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: var(--radius-sm);
+            padding: 3px;
+        }
+
+        .tab-btn {
+            background: transparent;
+            color: var(--text-dim);
+            border: none;
+            padding: 8px 20px;
+            font-family: var(--mono);
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: color 0.15s, background 0.15s;
+        }
+
+        .tab-btn:hover { color: var(--text); }
+
+        .tab-btn.active {
+            background: var(--surface-3);
+            color: var(--text);
+        }
+
+        /* ── Content container ───────────────────────────── */
+        .content-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* ── Section (per time period) ───────────────────── */
+        .section-wrap {
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+
+        /* ── Section Header (navbar-like) ─────────────────── */
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 18px;
+            background: var(--surface-2);
+            cursor: pointer;
+            user-select: none;
+            border-bottom: 1px solid var(--line-soft);
+            transition: background 0.15s;
+            gap: 12px;
+        }
+
+        .section-header:hover {
+            background: var(--surface-3);
+        }
+
+        .section-header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .section-title {
+            font-family: var(--mono);
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            color: var(--text);
+        }
+
+        .section-meta {
+            font-family: var(--mono);
+            font-size: 11px;
+            color: var(--text-faint);
+            letter-spacing: 0.04em;
+        }
+
+        .section-badges {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .badge {
+            font-family: var(--mono);
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            padding: 2px 7px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        .badge-warn {
+            background: var(--warn-bg);
+            color: var(--warn-color);
+            border: 1px solid rgba(245,158,11,0.2);
+        }
+
+        .badge-error {
+            background: var(--error-bg);
+            color: var(--error-color);
+            border: 1px solid rgba(239,68,68,0.2);
+        }
+
+        .badge-total {
+            background: rgba(255,255,255,0.05);
+            color: var(--text-faint);
+            border: 1px solid var(--line);
+        }
+
+        /* ── Arrow icon ──────────────────────────────────── */
+        .arrow-icon {
+            width: 22px;
+            height: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-dim);
+            transition: transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.15s;
+            flex-shrink: 0;
+        }
+
+        .arrow-icon svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .section-wrap.open .arrow-icon {
+            transform: rotate(90deg);
+            color: var(--text);
+        }
+
+        /* ── Section body ────────────────────────────────── */
+        .section-body {
+            overflow: hidden;
+            height: 0;
+            transition: height 0.36s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .section-body.auto {
+            height: auto;
+            transition: none;
+        }
+
+        /* ── Filter bar (inside section) ─────────────────── */
+        .filter-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--line-soft);
+        }
+
+        .filter-label {
+            font-family: var(--mono);
+            font-size: 10px;
+            color: var(--text-faint);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-right: 4px;
+        }
+
+        .filter-btn {
+            background: transparent;
+            border: 1px solid var(--line);
+            color: var(--text-dim);
+            padding: 5px 12px;
+            border-radius: 4px;
+            font-family: var(--mono);
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .filter-btn:hover {
+            border-color: var(--text-dim);
+            color: var(--text);
+        }
+
+        .filter-btn.active-all {
+            background: rgba(255,255,255,0.07);
+            color: var(--text);
+            border-color: var(--text-dim);
+        }
+
+        .filter-btn.active-warn {
+            background: var(--warn-bg);
+            color: var(--warn-color);
+            border-color: rgba(245,158,11,0.3);
+        }
+
+        .filter-btn.active-error {
+            background: var(--error-bg);
+            color: var(--error-color);
+            border-color: rgba(239,68,68,0.3);
+        }
+
+        /* ── Logs list ───────────────────────────────────── */
+        .logs-list {
+            padding: 4px 0 8px 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ── Log entry ───────────────────────────────────── */
+        .log-entry {
+            display: grid;
+            grid-template-columns: 80px 30px 1fr;
+            gap: 12px;
+            padding: 9px 18px;
+            border-bottom: 1px solid transparent;
+            transition: background 0.12s;
+            align-items: start;
+        }
+
+        .log-entry:hover {
+            background: var(--surface);
+        }
+
+        .log-entry.warn-row {
+            background: var(--warn-bg);
+            border-bottom: 1px solid rgba(245,158,11,0.08);
+        }
+
+        .log-entry.error-row {
+            background: var(--error-bg);
+            border-bottom: 1px solid rgba(239,68,68,0.08);
+        }
+
+        .log-entry[data-hidden="true"] {
+            display: none;
+        }
+
+        .log-time {
+            font-family: var(--mono);
+            font-size: 13px;
+            color: var(--text-faint);
+            white-space: nowrap;
+            padding-top: 1px;
+        }
+
+        .log-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding-top: 2px;
+        }
+
+        .log-icon svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .icon-info { color: transparent; }
+        .icon-warn { color: var(--warn-color); }
+        .icon-error { color: var(--error-color); }
+
+        .log-msg {
+            font-family: var(--mono);
+            font-size: 13px;
+            line-height: 1.6;
+            color: var(--text-dim);
+            word-break: break-word;
+        }
+
+        .log-entry.warn-row .log-msg { color: #c8a250; }
+        .log-entry.error-row .log-msg { color: #d88; }
+
+        .highlight-user {
+            color: var(--text);
+            font-weight: 700;
+        }
+
+        .highlight-ai {
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        /* ── Empty state ─────────────────────────────────── */
+        .empty-state {
+            padding: 60px 0;
+            text-align: center;
+            font-family: var(--mono);
+            font-size: 12px;
+            letter-spacing: 0.06em;
+            color: var(--text-faint);
+            text-transform: uppercase;
+        }
+
+        .no-logs-filter {
+            padding: 20px 18px;
+            font-family: var(--mono);
+            font-size: 12px;
+            color: var(--text-faint);
+            text-align: center;
+            letter-spacing: 0.04em;
+        }
+
+        /* ── Memory Tab ──────────────────────────────────── */
+        .memory-section {
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+
+        .memory-section-header {
+            padding: 12px 18px;
+            background: var(--surface-2);
+            border-bottom: 1px solid var(--line-soft);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .memory-section-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent);
+        }
+
+        .memory-section-title {
+            font-family: var(--mono);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-dim);
+        }
+
+        .memory-items {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .memory-item {
+            display: grid;
+            grid-template-columns: 130px 1fr auto;
+            gap: 0;
+            border-bottom: 1px solid var(--line-soft);
+            position: relative;
+        }
+
+        .memory-item:last-child {
+            border-bottom: none;
+        }
+
+        .memory-item.is-editing {
+            background: rgba(124,92,252,0.04);
+        }
+
+        .memory-item.is-deleting {
+            background: var(--error-bg);
+        }
+
+        .memory-key {
+            font-family: var(--mono);
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-faint);
+            letter-spacing: 0.04em;
+            padding: 14px 18px;
+            border-right: 1px solid var(--line-soft);
+            text-transform: uppercase;
+            background: rgba(255,255,255,0.02);
+            display: flex;
+            align-items: center;
+        }
+
+        .memory-val {
+            font-family: var(--sans);
+            font-size: 14px;
+            color: var(--text);
+            padding: 14px 16px;
+            line-height: 1.5;
+            display: flex;
+            align-items: center;
+            word-break: break-word;
+            min-width: 0;
+        }
+
+        /* Edit mode */
+        .memory-val-input {
+            font-family: var(--sans);
+            font-size: 14px;
+            color: var(--text);
+            background: transparent;
+            border: none;
+            outline: none;
+            width: 100%;
+            line-height: 1.5;
+            padding: 0;
+            caret-color: var(--accent);
+        }
+
+        /* Actions column */
+        .memory-actions {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            padding: 0 10px;
+            opacity: 0;
+            transition: opacity 0.15s;
+        }
+
+        .memory-item:hover .memory-actions,
+        .memory-item.is-editing .memory-actions {
+            opacity: 1;
+        }
+
+        .mem-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.13s, color 0.13s;
+            flex-shrink: 0;
+        }
+
+        .mem-btn svg {
+            width: 15px;
+            height: 15px;
+        }
+
+        .mem-btn-edit {
+            color: var(--text-faint);
+        }
+        .mem-btn-edit:hover {
+            background: rgba(124,92,252,0.12);
+            color: var(--accent);
+        }
+        .mem-btn-edit.active {
+            background: rgba(124,92,252,0.15);
+            color: var(--accent);
+        }
+
+        .mem-btn-save {
+            color: var(--text-faint);
+        }
+        .mem-btn-save:hover {
+            background: rgba(34,197,94,0.12);
+            color: #22c55e;
+        }
+
+        .mem-btn-cancel {
+            color: var(--text-faint);
+        }
+        .mem-btn-cancel:hover {
+            background: rgba(255,255,255,0.06);
+            color: var(--text);
+        }
+
+        .mem-btn-delete {
+            color: var(--text-faint);
+        }
+        .mem-btn-delete:hover {
+            background: var(--error-bg);
+            color: var(--error-color);
+        }
+
+        /* Delete confirm */
+        .delete-confirm {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            background: var(--error-bg);
+            border-top: 1px solid rgba(239,68,68,0.15);
+            font-family: var(--mono);
+            font-size: 12px;
+            color: #d88;
+        }
+
+        .memory-item.is-deleting .delete-confirm {
+            display: flex;
+        }
+
+        .delete-confirm-wrap {
+            grid-column: 1 / -1;
+        }
+
+        .del-confirm-btn {
+            background: rgba(239,68,68,0.15);
+            border: 1px solid rgba(239,68,68,0.3);
+            color: var(--error-color);
+            font-family: var(--mono);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            padding: 4px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.13s;
+        }
+        .del-confirm-btn:hover { background: rgba(239,68,68,0.25); }
+
+        .del-cancel-btn {
+            background: none;
+            border: 1px solid var(--line);
+            color: var(--text-dim);
+            font-family: var(--mono);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            padding: 4px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.13s;
+        }
+        .del-cancel-btn:hover { background: rgba(255,255,255,0.05); }
+
+        .memory-empty {
+            padding: 14px 18px;
+            font-family: var(--mono);
+            font-size: 12px;
+            color: var(--text-faint);
+        }
+
+        @media (max-width: 600px) {
+            body { padding: 20px 12px; }
+            header { flex-direction: column; align-items: flex-start; gap: 14px; }
+            .log-entry { grid-template-columns: 70px 22px 1fr; gap: 8px; }
+            .log-msg, .log-time { font-size: 12px; }
         }
     </style>
 </head>
 <body>
-<div class="page">
-    <section class="hero">
-        <div class="avatar-ring">🤖</div>
-        <h1 id="heroName">LiiL AI</h1>
-        <div class="tagline">Personal AI Assistant — Public Profile</div>
-        <div class="status-dot">Active</div>
-    </section>
 
-    <p class="section-label">📂 Public Memory</p>
-    <div id="memoryContainer">
-        <div class="memory-card">
-            <div class="empty-memory">Yuklanmoqda...</div>
+<div class="container">
+    <header>
+        <div class="title">
+            <h1>LiiL Data Center</h1>
+            <div class="subtitle">System log &amp; memory viewer</div>
         </div>
-    </div>
+        <div class="tabs">
+            <button class="tab-btn active" id="tabLogs" onclick="switchTab('logs')">Logs</button>
+            <button class="tab-btn" id="tabMemory" onclick="switchTab('memory')">Memory</button>
+        </div>
+    </header>
 
-    <footer class="footer">
-        <div>Bu sahifa LiiL AI tomonidan avtomatik yangilanadi.</div>
-        <div class="powered-by">⚡ Powered by <a href="https://github.com/LiiLKing1/LiiL" target="_blank">LiiL AI</a> + Vercel</div>
-    </footer>
+    <div class="content-container" id="contentBox">
+        <div class="empty-state">Yuklanmoqda...</div>
+    </div>
 </div>
 
 <script>
+    var liil_logs = [];
     var liil_memory = [];
+    var currentTab = 'logs';
 </script>
-<script src="memory_data.js" onerror="console.log('memory_data.js not found')"></script>
-<script>
-    function renderPublicMemory() {
-        const container = document.getElementById('memoryContainer');
-        container.innerHTML = '';
+<script src="liil_data.js" onerror="console.log('liil_data.js topilmadi')"></script>
+<script src="memory_data.js" onerror="console.log('memory_data.js topilmadi')"></script>
 
-        if (!liil_memory || liil_memory.length === 0) {
-            container.innerHTML = '<div class="memory-card"><div class="empty-memory">Hali public xotira mavjud emas.</div></div>';
+<script>
+    // ── SVG icons ──────────────────────────────────────────────────────────────
+    const ICONS = {
+        arrow: `<svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M7 5l5 5-5 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>`,
+        warn: `<svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M10 2.5L18 17H2L10 2.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+            <path d="M10 8v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            <circle cx="10" cy="14.5" r="0.8" fill="currentColor"/>
+        </svg>`,
+        error: `<svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M7.5 7.5l5 5M12.5 7.5l-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>`,
+        memUser: `<svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="10" cy="7" r="3.5" stroke="currentColor" stroke-width="1.7"/>
+            <path d="M3 17c0-3.3 3.1-6 7-6s7 2.7 7 6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+        </svg>`,
+        memCode: `<svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M6.5 7L3 10l3.5 3M13.5 7L17 10l-3.5 3M11 5l-2 10" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>`,
+        memOther: `<svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="1.7"/>
+            <path d="M7 10h6M7 7h4M7 13h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>`,
+        edit: `<svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M13.5 3.5a2.121 2.121 0 013 3L6 17H3v-3L13.5 3.5z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>`,
+        save: `<svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M4 10.5l4.5 4.5 8-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>`,
+        cancel: `<svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+        </svg>`,
+        trash: `<svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 6h14M8 6V4h4v2M6 6l1 11h6l1-11" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>`
+    };
+
+    const contentBox = document.getElementById('contentBox');
+    window.onload = () => renderContent();
+    function switchTab(tab) {
+        currentTab = tab;
+        document.getElementById('tabLogs').classList.toggle('active', tab === 'logs');
+        document.getElementById('tabMemory').classList.toggle('active', tab === 'memory');
+        renderContent();
+    }
+    function renderLogs() { if (currentTab === 'logs') renderContent(); }
+    function renderMemory() { if (currentTab === 'memory') renderContent(); }
+    function renderContent() {
+        contentBox.innerHTML = '';
+        currentTab === 'logs' ? renderLogsContent() : renderMemoryContent();
+    }
+
+    // ── Accordion open/close ────────────────────────────────────────────────
+    function setupAccordion(wrap, body) {
+        const inner = body.querySelector('.section-inner');
+        const isOpen = wrap.classList.contains('open');
+        if (isOpen) {
+            const current = body.classList.contains('auto')
+                ? inner ? inner.scrollHeight : body.scrollHeight
+                : body.getBoundingClientRect().height;
+            body.classList.remove('auto');
+            body.style.height = current + 'px';
+            wrap.classList.remove('open');
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                body.style.height = '0px';
+            }));
+        } else {
+            wrap.classList.add('open');
+            body.style.height = '0px';
+            const target = inner ? inner.scrollHeight : body.scrollHeight;
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                body.style.height = target + 'px';
+            }));
+            body.addEventListener('transitionend', function onEnd(e) {
+                if (e.propertyName !== 'height') return;
+                body.removeEventListener('transitionend', onEnd);
+                if (wrap.classList.contains('open')) {
+                    body.classList.add('auto');
+                    body.style.height = '';
+                }
+            });
+        }
+    }
+
+    // ── LOGS ────────────────────────────────────────────────────────────────
+    function renderLogsContent() {
+        if (!liil_logs || liil_logs.length === 0) {
+            contentBox.innerHTML = '<div class="empty-state">Log topilmadi</div>';
             return;
         }
 
-        // Try to find user name for hero
-        const nameFact = liil_memory.find(f => {
-            if (typeof f === 'object') return f.title && f.title.toLowerCase().includes('ism');
-            return false;
+        // Group: date → chunk (3h) → entries
+        const tree = {};
+        liil_logs.forEach(log => {
+            const [date, timeStr] = log.time.split(' ');
+            const time = timeStr || '00:00:00';
+            const hourNum = parseInt(time.split(':')[0]);
+            const chunkStart = Math.floor(hourNum / 3) * 3;
+            const chunkEnd = chunkStart + 3;
+            const chunkKey = `${String(chunkStart).padStart(2,'0')}:00 — ${String(chunkEnd).padStart(2,'0')}:00`;
+            if (!tree[date]) tree[date] = {};
+            if (!tree[date][chunkKey]) tree[date][chunkKey] = [];
+            tree[date][chunkKey].push(log);
         });
-        if (nameFact && nameFact.value) {
-            document.getElementById('heroName').textContent = nameFact.value;
+
+        const dates = Object.keys(tree).sort().reverse();
+        dates.forEach((date, dIdx) => {
+            const chunks = Object.keys(tree[date]).sort().reverse();
+            chunks.forEach((chunk, cIdx) => {
+                const logs = tree[date][chunk];
+                const warnCount = logs.filter(l => l.level === 'WARN').length;
+                const errorCount = logs.filter(l => l.level === 'ERROR').length;
+                const isFirst = dIdx === 0 && cIdx === 0;
+
+                // ── Section wrap
+                const sectionWrap = document.createElement('div');
+                sectionWrap.className = 'section-wrap' + (isFirst ? ' open' : '');
+
+                // ── Section header (navbar-like)
+                const header = document.createElement('div');
+                header.className = 'section-header';
+
+                const leftSide = document.createElement('div');
+                leftSide.className = 'section-header-left';
+
+                const arrow = document.createElement('div');
+                arrow.className = 'arrow-icon';
+                arrow.innerHTML = ICONS.arrow;
+
+                const titleEl = document.createElement('div');
+                titleEl.className = 'section-title';
+                titleEl.textContent = chunk;
+
+                const metaEl = document.createElement('div');
+                metaEl.className = 'section-meta';
+                metaEl.textContent = date;
+
+                leftSide.appendChild(arrow);
+                leftSide.appendChild(titleEl);
+                leftSide.appendChild(metaEl);
+
+                const badges = document.createElement('div');
+                badges.className = 'section-badges';
+
+                if (errorCount > 0) {
+                    const b = document.createElement('span');
+                    b.className = 'badge badge-error';
+                    b.textContent = `${errorCount} error`;
+                    badges.appendChild(b);
+                }
+                if (warnCount > 0) {
+                    const b = document.createElement('span');
+                    b.className = 'badge badge-warn';
+                    b.textContent = `${warnCount} warn`;
+                    badges.appendChild(b);
+                }
+                const bTotal = document.createElement('span');
+                bTotal.className = 'badge badge-total';
+                bTotal.textContent = `${logs.length}`;
+                badges.appendChild(bTotal);
+
+                header.appendChild(leftSide);
+                header.appendChild(badges);
+
+                // ── Section body
+                const body = document.createElement('div');
+                body.className = 'section-body' + (isFirst ? ' auto' : '');
+
+                const inner = document.createElement('div');
+                inner.className = 'section-inner';
+
+                // Filter bar
+                const filterBar = document.createElement('div');
+                filterBar.className = 'filter-bar';
+                const filterLabel = document.createElement('span');
+                filterLabel.className = 'filter-label';
+                filterLabel.textContent = 'Filter:';
+                filterBar.appendChild(filterLabel);
+
+                const filters = [
+                    { key: 'all',   label: 'Barchasi', cls: 'active-all'   },
+                    { key: 'WARN',  label: '⚠ Warn',    cls: 'active-warn'  },
+                    { key: 'ERROR', label: '✕ Error',   cls: 'active-error' },
+                ];
+                let activeFilter = 'all';
+
+                function applyFilter(key) {
+                    activeFilter = key;
+                    filterBtns.forEach(b => b.btn.classList.remove('active-all', 'active-warn', 'active-error'));
+                    const found = filterBtns.find(b => b.key === key);
+                    if (found) found.btn.classList.add(found.cls);
+                    const rows = logsList.querySelectorAll('.log-entry');
+                    let visible = 0;
+                    rows.forEach(row => {
+                        const lvl = row.dataset.level;
+                        const show = key === 'all' || lvl === key;
+                        row.dataset.hidden = show ? 'false' : 'true';
+                        if (show) visible++;
+                    });
+                    const noLogs = logsList.querySelector('.no-logs-filter');
+                    if (noLogs) noLogs.remove();
+                    if (visible === 0) {
+                        const empty = document.createElement('div');
+                        empty.className = 'no-logs-filter';
+                        empty.textContent = key === 'WARN'
+                            ? 'Bu davrda ogohlantirish yo\'q'
+                            : 'Bu davrda xato yo\'q';
+                        logsList.appendChild(empty);
+                    }
+                    // Recalc height
+                    if (body.classList.contains('auto')) return;
+                    body.style.height = inner.scrollHeight + 'px';
+                }
+
+                const filterBtns = [];
+                filters.forEach(f => {
+                    const btn = document.createElement('button');
+                    btn.className = 'filter-btn' + (f.key === 'all' ? ' active-all' : '');
+                    btn.textContent = f.label;
+                    if ((f.key === 'WARN' && warnCount === 0) || (f.key === 'ERROR' && errorCount === 0)) {
+                        btn.disabled = true;
+                        btn.style.opacity = '0.35';
+                    }
+                    btn.addEventListener('click', e => { e.stopPropagation(); applyFilter(f.key); });
+                    filterBar.appendChild(btn);
+                    filterBtns.push({ ...f, btn });
+                });
+                inner.appendChild(filterBar);
+
+                // Logs list
+                const logsList = document.createElement('div');
+                logsList.className = 'logs-list';
+
+                logs.forEach(log => {
+                    const entry = document.createElement('div');
+                    const lvl = log.level;
+                    let rowClass = 'log-entry';
+                    if (lvl === 'WARN') rowClass += ' warn-row';
+                    if (lvl === 'ERROR') rowClass += ' error-row';
+                    entry.className = rowClass;
+                    entry.dataset.level = lvl;
+                    entry.dataset.hidden = 'false';
+
+                    // Time
+                    const timeEl = document.createElement('div');
+                    timeEl.className = 'log-time';
+                    timeEl.textContent = log.time.split(' ')[1] || log.time;
+
+                    // Icon
+                    const iconEl = document.createElement('div');
+                    iconEl.className = 'log-icon';
+                    if (lvl === 'WARN') {
+                        iconEl.innerHTML = `<span class="icon-warn">${ICONS.warn}</span>`;
+                    } else if (lvl === 'ERROR') {
+                        iconEl.innerHTML = `<span class="icon-error">${ICONS.error}</span>`;
+                    } else {
+                        iconEl.innerHTML = `<span class="icon-info"></span>`;
+                    }
+
+                    // Message
+                    const msgEl = document.createElement('div');
+                    msgEl.className = 'log-msg';
+                    let safeMsg = log.msg.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    safeMsg = safeMsg.replace(/User:/g, '<span class="highlight-user">User:</span>');
+                    safeMsg = safeMsg.replace(/AI:/g, '<span class="highlight-ai">AI:</span>');
+                    msgEl.innerHTML = safeMsg;
+
+                    entry.appendChild(timeEl);
+                    entry.appendChild(iconEl);
+                    entry.appendChild(msgEl);
+                    logsList.appendChild(entry);
+                });
+
+                inner.appendChild(logsList);
+                body.appendChild(inner);
+
+                // Toggle
+                header.addEventListener('click', () => setupAccordion(sectionWrap, body));
+
+                sectionWrap.appendChild(header);
+                sectionWrap.appendChild(body);
+                contentBox.appendChild(sectionWrap);
+            });
+        });
+    }
+
+    // ── MEMORY ──────────────────────────────────────────────────────────────
+    function renderMemoryContent() {
+        if (!liil_memory || liil_memory.length === 0) {
+            contentBox.innerHTML = '<div class="empty-state">Xotira bo\'sh</div>';
+            return;
         }
 
-        const card = document.createElement('div');
-        card.className = 'memory-card';
-
-        const header = document.createElement('div');
-        header.className = 'memory-card-header';
-        header.innerHTML = '<span class="memory-card-icon">🧠</span><span class="memory-card-title">Sarvar haqida ma\'lumotlar</span>';
-        card.appendChild(header);
+        // Parse memory facts into structured fields
+        const userFields = [];
+        const codeFields = [];
+        const otherFields = [];
 
         liil_memory.forEach(fact => {
-            let key, val;
-            if (typeof fact === 'object' && fact !== null) {
-                key = fact.title || 'Ma\'lumot';
-                val = fact.value || '';
-            } else {
-                key = 'Ma\'lumot';
-                val = String(fact);
-            }
-
-            const row = document.createElement('div');
-            row.className = 'memory-row';
-            row.innerHTML = `
-                <div class="mem-key">${escHtml(key)}</div>
-                <div class="mem-val">${escHtml(val)}</div>
-            `;
-            card.appendChild(row);
+            const parsed = parseMemoryFact(fact);
+            if (parsed.type === 'user') userFields.push(...parsed.fields);
+            else if (parsed.type === 'code') codeFields.push(...parsed.fields);
+            else otherFields.push({ key: 'Ma\'lumot', value: fact });
         });
 
-        container.appendChild(card);
+        if (userFields.length > 0) {
+            contentBox.appendChild(buildMemorySection('Foydalanuvchi', ICONS.memUser, userFields));
+        }
+        if (codeFields.length > 0) {
+            contentBox.appendChild(buildMemorySection('Dasturiy', ICONS.memCode, codeFields));
+        }
+        if (otherFields.length > 0) {
+            contentBox.appendChild(buildMemorySection('Boshqa', ICONS.memOther, otherFields));
+        }
     }
 
-    function escHtml(s) {
-        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    function parseMemoryFact(fact) {
+        const lower = fact.toLowerCase();
+
+        // User personal info patterns
+        const userKeywords = ['ismi', 'familyasi', "tug'ilgan", 'sevimli', 'rangi', 'yosh', 'yil'];
+        const isUserFact = userKeywords.some(k => lower.includes(k));
+
+        if (isUserFact) {
+            const fields = [];
+
+            // Name patterns: "Sarvar Umrzaqov" - first and last name
+            const nameMatch = fact.match(/ismi\s+([A-Za-zА-Яа-яЎўҚқҒғҲҳ]+)/i)
+                || fact.match(/ismi\s+([A-Za-zА-Яа-яЎўҚқҒғҲҳ]+)\s+([A-Za-zА-Яа-яЎўҚқҒғҲҳ]+)/i);
+            const fullNameMatch = fact.match(/([A-Za-zА-Яа-яЎўҚқҒғҲҳ]{3,})\s+([A-Za-zА-Яа-яЎўҚқҒғҲҳ]{4,})/);
+
+            // Try to extract structured data
+            // "ismi Sarvar Umrzaqov"
+            const structuredName = fact.match(/ismi\s+([A-Za-zА-Яа-яЎўҚқҒғҲҳ]+)\s+([A-Za-zА-Яа-яЎўҚқҒғҲҳ]+)/i);
+            if (structuredName) {
+                fields.push({ key: 'Ismi', value: structuredName[1] });
+                fields.push({ key: 'Familiyasi', value: structuredName[2] });
+            } else {
+                const singleName = fact.match(/ismi\s+([A-Za-zА-Яа-яЎўҚқҒғҲҳ]+)/i);
+                if (singleName) fields.push({ key: 'Ismi', value: singleName[1] });
+            }
+
+            // Birth date: "2007-yil 7-noyabrda"
+            const birthMatch = fact.match(/(\d{4})-?yil\s+(\d+)-?(\w+)da/i)
+                || fact.match(/(\d{4})\s*yil\s*(\d+)\s*(\w+)/i);
+            if (birthMatch) {
+                fields.push({ key: "Tug'ilgan sana", value: `${birthMatch[2]}-${birthMatch[3]}, ${birthMatch[1]}` });
+            }
+
+            // Color preference: "sevimli rangi binafsha"
+            const colorMatch = fact.match(/sevimli\s+rangi\s+([A-Za-zА-Яа-яЎўҚқҒғҲҳ]+)/i)
+                || fact.match(/rang[i]?\s+([A-Za-zА-Яа-яЎўҚқҒғҲҳ]+)/i);
+            if (colorMatch) {
+                fields.push({ key: 'Sevimli rang', value: colorMatch[1] });
+            }
+
+            if (fields.length === 0) {
+                fields.push({ key: 'Ma\'lumot', value: fact });
+            }
+
+            return { type: 'user', fields };
+        }
+
+        // Code/app related
+        const codeKeywords = ['kod', 'dastur', 'script', 'file', 'path', 'function', 'class', 'import'];
+        const isCode = codeKeywords.some(k => lower.includes(k));
+        if (isCode) {
+            return { type: 'code', fields: [{ key: 'Dastur', value: fact }] };
+        }
+
+        return { type: 'other', fields: [{ key: 'Ma\'lumot', value: fact }] };
     }
 
-    renderPublicMemory();
+    function buildMemorySection(title, iconSvg, fields) {
+        const wrap = document.createElement('div');
+        wrap.className = 'memory-section';
+
+        const hdr = document.createElement('div');
+        hdr.className = 'memory-section-header';
+
+        const iconEl = document.createElement('div');
+        iconEl.className = 'memory-section-icon';
+        iconEl.innerHTML = iconSvg;
+
+        const titleEl = document.createElement('div');
+        titleEl.className = 'memory-section-title';
+        titleEl.textContent = title;
+
+        hdr.appendChild(iconEl);
+        hdr.appendChild(titleEl);
+        wrap.appendChild(hdr);
+
+        const items = document.createElement('div');
+        items.className = 'memory-items';
+
+        if (fields.length === 0) {
+            const empty = document.createElement('div');
+            empty.className = 'memory-empty';
+            empty.textContent = 'Ma\'lumot yo\'q';
+            items.appendChild(empty);
+        } else {
+            fields.forEach(f => {
+                items.appendChild(buildMemoryItem(f));
+            });
+        }
+
+        wrap.appendChild(items);
+        return wrap;
+    }
+
+    function buildMemoryItem(f) {
+        const item = document.createElement('div');
+        item.className = 'memory-item';
+
+        // Key cell
+        const keyEl = document.createElement('div');
+        keyEl.className = 'memory-key';
+        keyEl.textContent = f.key;
+
+        // Value cell
+        const valEl = document.createElement('div');
+        valEl.className = 'memory-val';
+        valEl.textContent = f.value;
+
+        // Actions cell
+        const actionsEl = document.createElement('div');
+        actionsEl.className = 'memory-actions';
+
+        // Edit button
+        const editBtn = document.createElement('button');
+        editBtn.className = 'mem-btn mem-btn-edit';
+        editBtn.title = 'Tahrirlash';
+        editBtn.innerHTML = ICONS.edit;
+
+        // Save button (hidden initially)
+        const saveBtn = document.createElement('button');
+        saveBtn.className = 'mem-btn mem-btn-save';
+        saveBtn.title = 'Saqlash';
+        saveBtn.innerHTML = ICONS.save;
+        saveBtn.style.display = 'none';
+
+        // Cancel button (hidden initially)
+        const cancelBtn = document.createElement('button');
+        cancelBtn.className = 'mem-btn mem-btn-cancel';
+        cancelBtn.title = 'Bekor qilish';
+        cancelBtn.innerHTML = ICONS.cancel;
+        cancelBtn.style.display = 'none';
+
+        // Delete button
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'mem-btn mem-btn-delete';
+        deleteBtn.title = 'O\'chirish';
+        deleteBtn.innerHTML = ICONS.trash;
+
+        actionsEl.appendChild(editBtn);
+        actionsEl.appendChild(saveBtn);
+        actionsEl.appendChild(cancelBtn);
+        actionsEl.appendChild(deleteBtn);
+
+        // Delete confirm row (spans all columns)
+        const confirmWrap = document.createElement('div');
+        confirmWrap.className = 'delete-confirm-wrap';
+        const confirmRow = document.createElement('div');
+        confirmRow.className = 'delete-confirm';
+        confirmRow.innerHTML = `<span>O'chirilsinmi?</span>`;
+
+        const confirmYes = document.createElement('button');
+        confirmYes.className = 'del-confirm-btn';
+        confirmYes.textContent = "Ha, o'chir";
+
+        const confirmNo = document.createElement('button');
+        confirmNo.className = 'del-cancel-btn';
+        confirmNo.textContent = 'Yo\'q';
+
+        confirmRow.appendChild(confirmYes);
+        confirmRow.appendChild(confirmNo);
+        confirmWrap.appendChild(confirmRow);
+
+        item.appendChild(keyEl);
+        item.appendChild(valEl);
+        item.appendChild(actionsEl);
+        item.appendChild(confirmWrap);
+
+        // ── Edit logic ─────────────────────────────────────
+        let originalValue = f.value;
+
+        editBtn.addEventListener('click', () => {
+            item.classList.add('is-editing');
+            editBtn.classList.add('active');
+            editBtn.style.display = 'none';
+            deleteBtn.style.display = 'none';
+            saveBtn.style.display = 'flex';
+            cancelBtn.style.display = 'flex';
+
+            // Replace text with input
+            const input = document.createElement('input');
+            input.className = 'memory-val-input';
+            input.type = 'text';
+            input.value = originalValue;
+            valEl.textContent = '';
+            valEl.appendChild(input);
+            input.focus();
+            input.select();
+
+            // Enter to save
+            input.addEventListener('keydown', e => {
+                if (e.key === 'Enter') saveBtn.click();
+                if (e.key === 'Escape') cancelBtn.click();
+            });
+        });
+
+        saveBtn.addEventListener('click', () => {
+            const input = valEl.querySelector('.memory-val-input');
+            const newVal = input ? input.value.trim() : originalValue;
+            if (newVal) {
+                originalValue = newVal;
+                f.value = newVal;
+            }
+            exitEditMode(originalValue);
+        });
+
+        cancelBtn.addEventListener('click', () => {
+            exitEditMode(originalValue);
+        });
+
+        function exitEditMode(val) {
+            item.classList.remove('is-editing');
+            editBtn.classList.remove('active');
+            editBtn.style.display = 'flex';
+            deleteBtn.style.display = 'flex';
+            saveBtn.style.display = 'none';
+            cancelBtn.style.display = 'none';
+            valEl.textContent = val;
+        }
+
+        // ── Delete logic ────────────────────────────────────
+        deleteBtn.addEventListener('click', () => {
+            item.classList.add('is-deleting');
+            item.classList.remove('is-editing');
+        });
+
+        confirmNo.addEventListener('click', () => {
+            item.classList.remove('is-deleting');
+        });
+
+        confirmYes.addEventListener('click', () => {
+            item.style.overflow = 'hidden';
+            item.style.transition = 'opacity 0.2s, max-height 0.28s 0.1s';
+            item.style.opacity = '0';
+            item.style.maxHeight = item.offsetHeight + 'px';
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                item.style.maxHeight = '0';
+                item.style.borderBottom = 'none';
+            }));
+            item.addEventListener('transitionend', () => item.remove(), { once: true });
+        });
+
+        return item;
+    }
 </script>
 </body>
 </html>
