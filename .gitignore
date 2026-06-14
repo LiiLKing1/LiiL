@@ -1,25 +1,33 @@
-# Build directories
+# LiiL Backend & C++ files (Ignored for public repo)
+src/
+Apps/
 build/
-out/
-bin/
+Release/
+Debug/
+CMakeLists.txt
+
+# Executables and Binaries
 *.exe
 *.dll
 
-# IDE and OS files
+# IDE and Project files
 .vs/
 .vscode/
 *.user
 *.suo
-CMakeCache.txt
-CMakeFiles/
-CMakeScripts/
-Testing/
-Makefile
-cmake_install.cmake
-install_manifest.txt
-compile_commands.json
+*.sln
+*.vcxproj
+*.vcxproj.*
 
-# LiiL specific
+# LiiL Specific config and data
 settings.ini
-liil.log
-*.bmp
+*.log
+temp/
+*.wav
+*.cache
+
+# Ensure Frontend files are always tracked
+!public/
+!public/index.html
+!public/memory_data.js
+!vercel.json
