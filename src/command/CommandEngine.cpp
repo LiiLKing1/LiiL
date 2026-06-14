@@ -2,10 +2,16 @@
 #include "SystemCommands.h"
 #include "SystemActions.h"
 #include "AutomationEngine.h"
+#include "AppScanner.h"
+#include "AIEngine.h"
 #include "../core/Logger.h"
+#include "../core/MemoryManager.h"
 #include <algorithm>
 #include <regex>
 #include <cctype>
+#include <thread>
+#include <windows.h>
+#include <shellapi.h>
 
 namespace liil {
 namespace command {
@@ -16,6 +22,11 @@ CommandEngine& CommandEngine::GetInstance() {
 }
 
 void CommandEngine::Initialize() {
+    // Barcha dasturlarni FONDA skanerlash — UI ni bloklamaydi
+    std::thread([]() {
+        AppScanner::ScanAll();
+    }).detach();
+
     // Media commands
     RegisterCommand("ovozni oshir", SystemCommands::VolumeUp);
     RegisterCommand("ovozni pasaytir", SystemCommands::VolumeDown);
@@ -40,6 +51,11 @@ void CommandEngine::Initialize() {
     // Automation Modes
     RegisterCommand("coding mode", [](){ AutomationEngine::ExecuteMode("coding"); });
     RegisterCommand("gaming mode", [](){ AutomationEngine::ExecuteMode("gaming"); });
+
+    // Dasturlar ro'yxati
+    RegisterCommand("dasturlar", AppScanner::PrintAppList);
+    RegisterCommand("ilovalar", AppScanner::PrintAppList);
+    RegisterCommand("programlar", AppScanner::PrintAppList);
     
     core::Logger::Info("Command Engine initsializatsiya qilindi. Ovoz, yorqinlik, dasturlar, amallar va rejimlar tayyor.");
 }
@@ -106,8 +122,72 @@ void CommandEngine::Execute(const std::string& input) {
             SystemActions::OpenFolder(target);
         }
         else {
-            core::Logger::Warning("Noma'lum buyruq: " + input);
+            // "...qayerda" — dastur yo'lini ko'rsatish
+            std::regex whereRegex(R"(^(.+?)\s+qayerda$)");
+            if (std::regex_match(normalized, match, whereRegex) && match.size() > 1) {
+                std::string target = match[1].str();
+                target = std::regex_replace(target, std::regex(R"(\s+$)"), "");
+                std::string path = AppScanner::FindApp(target);
+                if (!path.empty()) {
+                    core::Logger::Info("[" + target + "] manzili: " + path);
+                } else {
+                    core::Logger::Warning("'" + target + "' dasturi topilmadi.");
+                }
+            } else {
+                // Agar qayerda ham bo'lmasa, AI ga topshiramiz
+                AIEngine::ProcessCommand(input);
+            }
         }
+    }
+}
+
+void CommandEngine::ExecuteAction(const std::string& action, const std::string& target) {
+    if (action == "chat") {
+        core::Logger::Info("AI: " + target);
+    } else if (action == "open_app") {
+        SystemCommands::OpenApp(target);
+    } else if (action == "close_app") {
+        SystemActions::CloseApp(target);
+    } else if (action == "open_folder") {
+        SystemActions::OpenFolder(target);
+    } else if (action == "volume_up") {
+        SystemCommands::VolumeUp();
+    } else if (action == "volume_down") {
+        SystemCommands::VolumeDown();
+    } else if (action == "volume_mute") {
+        SystemCommands::VolumeMute();
+    } else if (action == "brightness_up") {
+        SystemCommands::BrightnessUp();
+    } else if (action == "brightness_down") {
+        SystemCommands::BrightnessDown();
+    } else if (action == "take_screenshot") {
+        SystemActions::TakeScreenshot();
+    } else if (action == "coding_mode") {
+        AutomationEngine::ExecuteMode("coding");
+    } else if (action == "gaming_mode") {
+        AutomationEngine::ExecuteMode("gaming");
+    } else if (action == "view_logs") {
+        char buffer[MAX_PATH];
+        GetModuleFileNameA(NULL, buffer, MAX_PATH);
+        std::string currentPath(buffer);
+        currentPath = currentPath.substr(0, currentPath.find_last_of("\\/"));
+        
+        std::string htmlPath = "file:///" + currentPath + "/logs.html";
+        // replace all backslashes with forward slashes for URL format
+        std::replace(htmlPath.begin(), htmlPath.end(), '\\', '/');
+
+        if (!target.empty()) {
+            htmlPath += "?date=" + target;
+        }
+        
+        // Use ShellExecute directly for the URL format
+        ShellExecuteA(NULL, "open", htmlPath.c_str(), NULL, NULL, SW_SHOWNORMAL);
+        core::Logger::Info("Loglar oynasi ochilmoqda...");
+    } else if (action == "update_memory" || action == "save_memory") {
+        core::MemoryManager::GetInstance().ProcessFactJSON(target);
+        core::Logger::Info("Xotira tahrirlandi: " + target);
+    } else {
+        core::Logger::Warning("AI jo'natgan noma'lum harakat: " + action);
     }
 }
 

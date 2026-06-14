@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LiiL — Sarvar haqida</title>
+    <meta name="description" content="LiiL AI tomonidan Sarvar haqida saqlangan ommaviy ma'lumotlar.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg:        #070b10;
+            --surface:   #0e1420;
+            --surface-2: #131b28;
+            --border:    #1e2a3a;
+            --accent:    #6c8aff;
+            --accent-2:  #a855f7;
+            --green:     #22c55e;
+            --text:      #eef2ff;
+            --text-dim:  #7889aa;
+            --text-faint:#3b4d6a;
+            --mono: 'JetBrains Mono', monospace;
+            --sans: 'Inter', sans-serif;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--sans);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ── Background grid ── */
+        body::before {
+            content: '';
+            position: fixed; inset: 0;
+            background-image:
+                linear-gradient(rgba(108,138,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(108,138,255,0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none; z-index: 0;
+        }
+
+        .page { position: relative; z-index: 1; max-width: 760px; margin: 0 auto; padding: 60px 20px 100px; }
+
+        /* ── Hero ── */
+        .hero { text-align: center; margin-bottom: 64px; }
+        .avatar-ring {
+            width: 90px; height: 90px; margin: 0 auto 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 36px;
+            box-shadow: 0 0 0 1px rgba(108,138,255,0.3), 0 20px 60px rgba(108,138,255,0.15);
+        }
+        .hero h1 {
+            font-size: 32px; font-weight: 800; letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #eef2ff 0%, #a5b4fc 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+        .hero .tagline {
+            font-family: var(--mono); font-size: 12px; color: var(--text-faint);
+            letter-spacing: 0.1em; text-transform: uppercase;
+        }
+        .status-dot {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.2);
+            color: var(--green); font-family: var(--mono); font-size: 11px;
+            font-weight: 600; letter-spacing: 0.06em;
+            padding: 5px 12px; border-radius: 20px; margin-top: 16px;
+        }
+        .status-dot::before {
+            content: ''; width: 7px; height: 7px; border-radius: 50%;
+            background: var(--green);
+            box-shadow: 0 0 8px var(--green);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.6;transform:scale(1.2)} }
+
+        /* ── Section label ── */
+        .section-label {
+            font-family: var(--mono); font-size: 10px; font-weight: 700;
+            letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-faint);
+            margin-bottom: 12px; padding-left: 2px;
+        }
+
+        /* ── Memory card ── */
+        .memory-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
+            margin-bottom: 28px;
+        }
+        .memory-card-header {
+            display: flex; align-items: center; gap: 10px;
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface-2);
+        }
+        .memory-card-icon { font-size: 16px; }
+        .memory-card-title {
+            font-family: var(--mono); font-size: 11px; font-weight: 700;
+            letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim);
+        }
+        .memory-row {
+            display: grid; grid-template-columns: 160px 1fr;
+            border-bottom: 1px solid rgba(30,42,58,0.7);
+        }
+        .memory-row:last-child { border-bottom: none; }
+        .mem-key {
+            font-family: var(--mono); font-size: 11px; font-weight: 700;
+            color: var(--text-faint); letter-spacing: 0.05em; text-transform: uppercase;
+            padding: 14px 20px; border-right: 1px solid rgba(30,42,58,0.7);
+            background: rgba(255,255,255,0.012);
+            display: flex; align-items: center;
+        }
+        .mem-val {
+            font-size: 14px; color: var(--text);
+            padding: 14px 20px; line-height: 1.6;
+            display: flex; align-items: center;
+        }
+        .empty-memory {
+            padding: 36px 20px; text-align: center;
+            font-family: var(--mono); font-size: 12px; color: var(--text-faint);
+            letter-spacing: 0.06em;
+        }
+
+        /* ── Footer ── */
+        .footer {
+            margin-top: 64px; text-align: center;
+            font-family: var(--mono); font-size: 11px; color: var(--text-faint);
+            letter-spacing: 0.06em;
+        }
+        .footer a { color: var(--accent); text-decoration: none; }
+        .footer a:hover { text-decoration: underline; }
+        .powered-by {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 8px; padding: 8px 16px; margin-top: 12px;
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+    <section class="hero">
+        <div class="avatar-ring">🤖</div>
+        <h1 id="heroName">LiiL AI</h1>
+        <div class="tagline">Personal AI Assistant — Public Profile</div>
+        <div class="status-dot">Active</div>
+    </section>
+
+    <p class="section-label">📂 Public Memory</p>
+    <div id="memoryContainer">
+        <div class="memory-card">
+            <div class="empty-memory">Yuklanmoqda...</div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div>Bu sahifa LiiL AI tomonidan avtomatik yangilanadi.</div>
+        <div class="powered-by">⚡ Powered by <a href="https://github.com/LiiLKing1/LiiL" target="_blank">LiiL AI</a> + Vercel</div>
+    </footer>
+</div>
+
+<script>
+    var liil_memory = [];
+</script>
+<script src="memory_data.js" onerror="console.log('memory_data.js not found')"></script>
+<script>
+    function renderPublicMemory() {
+        const container = document.getElementById('memoryContainer');
+        container.innerHTML = '';
+
+        if (!liil_memory || liil_memory.length === 0) {
+            container.innerHTML = '<div class="memory-card"><div class="empty-memory">Hali public xotira mavjud emas.</div></div>';
+            return;
+        }
+
+        // Try to find user name for hero
+        const nameFact = liil_memory.find(f => {
+            if (typeof f === 'object') return f.title && f.title.toLowerCase().includes('ism');
+            return false;
+        });
+        if (nameFact && nameFact.value) {
+            document.getElementById('heroName').textContent = nameFact.value;
+        }
+
+        const card = document.createElement('div');
+        card.className = 'memory-card';
+
+        const header = document.createElement('div');
+        header.className = 'memory-card-header';
+        header.innerHTML = '<span class="memory-card-icon">🧠</span><span class="memory-card-title">Sarvar haqida ma\'lumotlar</span>';
+        card.appendChild(header);
+
+        liil_memory.forEach(fact => {
+            let key, val;
+            if (typeof fact === 'object' && fact !== null) {
+                key = fact.title || 'Ma\'lumot';
+                val = fact.value || '';
+            } else {
+                key = 'Ma\'lumot';
+                val = String(fact);
+            }
+
+            const row = document.createElement('div');
+            row.className = 'memory-row';
+            row.innerHTML = `
+                <div class="mem-key">${escHtml(key)}</div>
+                <div class="mem-val">${escHtml(val)}</div>
+            `;
+            card.appendChild(row);
+        });
+
+        container.appendChild(card);
+    }
+
+    function escHtml(s) {
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    renderPublicMemory();
+</script>
+</body>
+</html>

@@ -1,4 +1,5 @@
 #include "SystemCommands.h"
+#include "AppScanner.h"
 #include "../core/Logger.h"
 #include "../config/ConfigManager.h"
 #include <windows.h>
@@ -117,41 +118,27 @@ void SystemCommands::BrightnessDown() {
 }
 
 void SystemCommands::OpenApp(const std::string& appName) {
-    // 1. Apps papkasidan qidirish
-    wchar_t exePath[MAX_PATH];
-    GetModuleFileNameW(NULL, exePath, MAX_PATH);
-    std::filesystem::path appsDir = std::filesystem::path(exePath).parent_path() / "Apps";
+    // 1. AppScanner orqali barcha manbalardan izlash
+    //    (Start Menu, Desktop, Apps/ papkasi)
+    std::string foundPath = AppScanner::FindApp(appName);
 
-    if (std::filesystem::exists(appsDir) && std::filesystem::is_directory(appsDir)) {
-        for (const auto& entry : std::filesystem::directory_iterator(appsDir)) {
-            if (entry.path().extension() == ".lnk") {
-                std::string linkName = entry.path().stem().string();
-                
-                std::string q = appName;
-                std::string t = linkName;
-                q.erase(std::remove(q.begin(), q.end(), ' '), q.end());
-                t.erase(std::remove(t.begin(), t.end(), ' '), t.end());
-                std::transform(q.begin(), q.end(), q.begin(), ::tolower);
-                std::transform(t.begin(), t.end(), t.begin(), ::tolower);
-                
-                if (!q.empty() && t.find(q) != std::string::npos) {
-                    core::Logger::Info("Apps papkasidan topildi: " + linkName);
-                    std::wstring wpath = entry.path().wstring();
-                    ShellExecuteW(NULL, L"open", wpath.c_str(), NULL, NULL, SW_SHOWNORMAL);
-                    return; // Topdik va ochdik
-                }
-            }
-        }
+    if (!foundPath.empty()) {
+        core::Logger::Info("Topildi va ochilmoqda: " + foundPath);
+        int wlen = MultiByteToWideChar(CP_UTF8, 0, foundPath.c_str(), -1, NULL, 0);
+        std::wstring wpath(wlen, 0);
+        MultiByteToWideChar(CP_UTF8, 0, foundPath.c_str(), -1, &wpath[0], wlen);
+        HINSTANCE result = ShellExecuteW(NULL, L"open", wpath.c_str(), NULL, NULL, SW_SHOWNORMAL);
+        if (reinterpret_cast<INT_PTR>(result) > 32) return;
+        core::Logger::Warning("ShellExecute muvaffaqiyatsiz, zaxira usulga o'tilmoqda...");
     }
 
-    // 2. Oddiy usulda ochish
+    // 2. ConfigManager'dan maxsus yo'lni tekshirish
     auto& config = config::ConfigManager::GetInstance();
-    
     std::string key = "app_" + appName;
     for (auto& c : key) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-
     std::string path = config.GetString(key, "");
-    
+
+    // 3. Oxirgi zaxira: mashhur dasturlar uchun hard-coded yo'llar
     if (path.empty()) {
         if (appName == "yandex") path = "browser.exe";
         else if (appName == "steam") path = "steam://";
@@ -160,16 +147,14 @@ void SystemCommands::OpenApp(const std::string& appName) {
         else path = appName + ".exe";
     }
 
-    core::Logger::Info("Dastur ochilmoqda: " + appName + " (" + path + ")");
-
+    core::Logger::Info("Dastur ochilmoqda (zaxira): " + appName + " (" + path + ")");
     int wlen = MultiByteToWideChar(CP_UTF8, 0, path.c_str(), -1, NULL, 0);
     std::wstring wpath(wlen, 0);
     MultiByteToWideChar(CP_UTF8, 0, path.c_str(), -1, &wpath[0], wlen);
-
     HINSTANCE result = ShellExecuteW(NULL, L"open", wpath.c_str(), NULL, NULL, SW_SHOWNORMAL);
-    
     if (reinterpret_cast<INT_PTR>(result) <= 32) {
-        core::Logger::Error("Dasturni ochishda xatolik yuz berdi. Apps papkasiga yorliq (.lnk) joylang.");
+        core::Logger::Error("Dastur topilmadi: '" + appName +
+            "'. Start Menu'da yo'q bo'lishi mumkin.");
     }
 }
 

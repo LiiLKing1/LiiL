@@ -1,4 +1,5 @@
 #include "SystemActions.h"
+#include "AppScanner.h"
 #include "../core/Logger.h"
 #include "../config/ConfigManager.h"
 #include <windows.h>
@@ -116,23 +117,36 @@ void SystemActions::OpenFolder(const std::string& folderName) {
 void SystemActions::CloseApp(const std::string& appName) {
     core::Logger::Info("Dasturni yopishga harakat qilinmoqda: " + appName);
     
-    // Map common names to exe names
-    std::string exeName = appName;
-    if (appName == "yandex") exeName = "browser.exe";
-    else if (appName == "telegram") exeName = "Telegram.exe";
-    else if (appName == "steam") exeName = "steam.exe";
-    else if (appName == "roblox") exeName = "RobloxPlayerBeta.exe";
-    else if (appName == "yandexmusic") exeName = "YandexMusic.exe";
-    else exeName += ".exe";
+    // 1. AppScanner orqali .exe nomini topish
+    std::string exeName = AppScanner::FindExeName(appName);
 
-    std::wstring wexeName;
-    wexeName.assign(exeName.begin(), exeName.end());
+    // 2. Topilmasa — eski hard-coded map
+    if (exeName.empty()) {
+        if (appName == "yandex") exeName = "browser.exe";
+        else if (appName == "telegram") exeName = "Telegram.exe";
+        else if (appName == "steam") exeName = "steam.exe";
+        else if (appName == "roblox") exeName = "RobloxPlayerBeta.exe";
+        else if (appName == "yandexmusic") exeName = "YandexMusic.exe";
+        else exeName = appName + ".exe";
+    }
+
+    int wlen = MultiByteToWideChar(CP_UTF8, 0, exeName.c_str(), -1, NULL, 0);
+    std::wstring wexeName(wlen, 0);
+    MultiByteToWideChar(CP_UTF8, 0, exeName.c_str(), -1, &wexeName[0], wlen);
+    // Remove the null terminator that MultiByteToWideChar adds when length is computed with -1
+    if (!wexeName.empty() && wexeName.back() == L'\0') {
+        wexeName.pop_back();
+    }
     
     std::wstring searchLower = wexeName;
     std::transform(searchLower.begin(), searchLower.end(), searchLower.begin(), std::towlower);
     
-    std::wstring appNameW;
-    appNameW.assign(appName.begin(), appName.end());
+    int awlen = MultiByteToWideChar(CP_UTF8, 0, appName.c_str(), -1, NULL, 0);
+    std::wstring appNameW(awlen, 0);
+    MultiByteToWideChar(CP_UTF8, 0, appName.c_str(), -1, &appNameW[0], awlen);
+    if (!appNameW.empty() && appNameW.back() == L'\0') {
+        appNameW.pop_back();
+    }
     std::transform(appNameW.begin(), appNameW.end(), appNameW.begin(), std::towlower);
 
     HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);

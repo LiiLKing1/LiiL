@@ -42,6 +42,7 @@ private:
     std::string LevelToString(LogLevel level) const;
 
     std::ofstream m_fileStream;
+    std::ofstream m_jsStream;
     std::mutex m_mutex;
     std::function<void(const std::string&)> m_uiCallback;
 };

@@ -11,7 +11,6 @@ if(MSVC)
     add_compile_definitions(UNICODE _UNICODE)
 else()
     add_compile_options(-Wall -Wextra)
-    add_compile_definitions(UNICODE _UNICODE)
 endif()
 
 # Source files
@@ -24,6 +23,13 @@ set(SOURCES
     src/command/CommandEngine.cpp
     src/command/SystemActions.cpp
     src/command/AutomationEngine.cpp
+    src/command/AppScanner.cpp
+    src/core/HttpClient.cpp
+    src/command/AIEngine.cpp
+    src/core/SystemMonitor.cpp
+    src/core/MemoryManager.cpp
+    src/voice/VoiceManager.cpp
+    src/voice/AudioRecorder.cpp
 )
 
 # Header files (for IDE grouping)
@@ -35,6 +41,13 @@ set(HEADERS
     src/command/CommandEngine.h
     src/command/SystemActions.h
     src/command/AutomationEngine.h
+    src/command/AppScanner.h
+    src/core/HttpClient.h
+    src/command/AIEngine.h
+    src/core/SystemMonitor.h
+    src/core/MemoryManager.h
+    src/voice/VoiceManager.h
+    src/voice/AudioRecorder.h
 )
 
 # Add executable
@@ -45,4 +58,4 @@ add_executable(${PROJECT_NAME} WIN32 ${SOURCES} ${HEADERS})
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 # Link Windows libraries
-target_link_libraries(${PROJECT_NAME} PRIVATE User32 Gdi32 Comctl32 Dxva2)
+target_link_libraries(${PROJECT_NAME} PRIVATE User32 Gdi32 Comctl32 Dxva2 Winhttp)

@@ -18,6 +18,7 @@ public:
 
     void Initialize();
     void Execute(const std::string& input);
+    void ExecuteAction(const std::string& action, const std::string& target);
 
 private:
     CommandEngine() = default;

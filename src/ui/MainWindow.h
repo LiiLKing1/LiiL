@@ -2,6 +2,7 @@
 
 #include <windows.h>
 #include <string>
+#include <vector>
 
 namespace liil {
 namespace ui {
@@ -26,8 +27,20 @@ private:
     HWND m_hwnd;
     HWND m_hLogArea;
     HWND m_hInputBox;
+    HWND m_hMicBtn;
+    HWND m_hPauseBtn;
+    HWND m_hCancelBtn;
     
     HFONT m_hFont;
+    
+    // Equalizer va Voice
+    int m_amplitude;
+    std::vector<int> m_eqHistory;
+    
+    void UpdateEqualizer(int amp);
+    void DrawEqualizer(HDC hdc, RECT rect);
+    void ToggleDictation();
+    void HandleDictationResult(const std::string& text);
 };
 
 } // namespace ui

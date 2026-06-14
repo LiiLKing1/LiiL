@@ -17,6 +17,9 @@ Logger::~Logger() {
     if (m_fileStream.is_open()) {
         m_fileStream.close();
     }
+    if (m_jsStream.is_open()) {
+        m_jsStream.close();
+    }
 }
 
 void Logger::Initialize(const std::string& logFilePath) {
@@ -24,8 +27,32 @@ void Logger::Initialize(const std::string& logFilePath) {
     if (m_fileStream.is_open()) {
         m_fileStream.close();
     }
+    if (m_jsStream.is_open()) {
+        m_jsStream.close();
+    }
     
     m_fileStream.open(logFilePath, std::ios::app | std::ios::out);
+    
+    // JS fayli uchun
+    std::string jsPath = logFilePath;
+    if (jsPath.find(".log") != std::string::npos) {
+        jsPath.replace(jsPath.find(".log"), 4, "_data.js");
+    } else {
+        jsPath += "_data.js";
+    }
+    
+    bool jsExists = false;
+    std::ifstream checkJs(jsPath);
+    if (checkJs.is_open()) {
+        jsExists = true;
+        checkJs.close();
+    }
+    
+    m_jsStream.open(jsPath, std::ios::app | std::ios::out);
+    if (!jsExists && m_jsStream.is_open()) {
+        m_jsStream << "var liil_logs = [];\nfunction addLog(entry) { liil_logs.push(entry); if(typeof renderLogs !== 'undefined') { renderLogs(); } }\n";
+        m_jsStream.flush();
+    }
 }
 
 void Logger::SetUICallback(std::function<void(const std::string&)> callback) {
@@ -48,6 +75,23 @@ void Logger::Log(LogLevel level, const std::string& message) {
     if (m_fileStream.is_open()) {
         m_fileStream << finalStr;
         m_fileStream.flush();
+    }
+    
+    // Write to JS file
+    if (m_jsStream.is_open()) {
+        std::string safeMsg = message;
+        // escape quotes and slashes
+        size_t pos = 0;
+        while((pos = safeMsg.find('\\', pos)) != std::string::npos) { safeMsg.replace(pos, 1, "\\\\"); pos += 2; }
+        pos = 0;
+        while((pos = safeMsg.find('\"', pos)) != std::string::npos) { safeMsg.replace(pos, 1, "\\\""); pos += 2; }
+        pos = 0;
+        while((pos = safeMsg.find('\n', pos)) != std::string::npos) { safeMsg.replace(pos, 1, "\\n"); pos += 2; }
+        pos = 0;
+        while((pos = safeMsg.find('\r', pos)) != std::string::npos) { safeMsg.replace(pos, 1, ""); }
+        
+        m_jsStream << "addLog({\"time\": \"" << timeStr << "\", \"level\": \"" << levelStr << "\", \"msg\": \"" << safeMsg << "\"});\n";
+        m_jsStream.flush();
     }
     
     // Write to UI if callback is set

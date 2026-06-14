@@ -3,6 +3,7 @@
 #include "core/Logger.h"
 #include "config/ConfigManager.h"
 #include "command/CommandEngine.h"
+#include "core/MemoryManager.h"
 #include <string>
 #include <filesystem>
 
@@ -42,6 +43,9 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
     // Initialize Command Engine
     auto& cmdEngine = liil::command::CommandEngine::GetInstance();
     cmdEngine.Initialize();
+
+    // Initialize Memory Manager
+    liil::core::MemoryManager::GetInstance().Initialize(exeDir.string());
 
     liil::core::Logger::Info("LiiL starting up...");
     liil::core::Logger::Info("Version: " + config.GetString("version"));
